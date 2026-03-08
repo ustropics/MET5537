@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MET 5537 — Convection Study Guides</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Crimson+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #060a12;
+    --bg-panel: #0c1120;
+    --bg-card: #111827;
+    --border: #1a2336;
+    --border-hover: #2a3a56;
+    --text: #e2e8f0;
+    --text-dim: #7889a5;
+    --text-muted: #4a5a74;
+    --accent-orange: #f97316;
+    --accent-sky: #38bdf8;
+    --accent-amber: #f59e0b;
+    --accent-fire: #e85d04;
+    --accent-cyan: #0ea5e9;
+    --accent-warm: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Serif 4', serif;
+    background: var(--bg-deep);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* === LAYOUT === */
+  .shell {
+    display: flex;
+    height: 100vh;
+  }
+
+  /* === SIDEBAR === */
+  .sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+  }
+
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .sidebar-course {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-orange);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.2s forwards;
+  }
+
+  .sidebar-title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.35s forwards;
+  }
+
+  .sidebar-title em {
+    font-style: italic;
+    color: var(--accent-warm);
+  }
+
+  .sidebar-subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    line-height: 1.5;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.5s forwards;
+  }
+
+  /* Nav items */
+  .nav-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .nav-group-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    padding: 16px 12px 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--border-hover);
+  }
+
+  .nav-item:hover .nav-num {
+    opacity: 1;
+  }
+
+  .nav-item.active {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--active-color, var(--accent-orange));
+    box-shadow: 0 0 20px -6px var(--active-color, var(--accent-orange));
+  }
+
+  .nav-item.active .nav-num {
+    background: var(--active-color, var(--accent-orange));
+    color: var(--bg-deep);
+    opacity: 1;
+  }
+
+  .nav-item.active .nav-title {
+    color: var(--text);
+  }
+
+  .nav-item.active .nav-sub {
+    color: var(--text-dim);
+  }
+
+  .nav-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+  }
+
+  .nav-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .nav-title {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+    transition: color 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    transition: color 0.2s ease;
+  }
+
+  .nav-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  /* === MAIN CONTENT === */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .content-frame {
+    flex: 1;
+    border: none;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-deep);
+  }
+
+  /* Welcome screen */
+  .welcome {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+  }
+
+  .welcome-inner {
+    max-width: 480px;
+  }
+
+  .welcome-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeScaleIn 0.6s 0.3s forwards;
+  }
+
+  .welcome-heading {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.5s forwards;
+  }
+
+  .welcome-desc {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.65s forwards;
+  }
+
+  .welcome-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 32px;
+    opacity: 0;
+    animation: fadeSlideUp 0.5s 0.8s forwards;
+  }
+
+  .welcome-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+
+  .welcome-stat-num {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent-warm);
+  }
+
+  .welcome-stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  /* Mobile toggle */
+  .mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 20;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+  }
+
+  .mobile-toggle:hover {
+    background: var(--bg-card);
+    border-color: var(--border-hover);
+  }
+
+  .mobile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 5;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Keyboard hint */
+  .key-hints {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .key-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .key-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  /* Animations */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeScaleIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      transform: translateX(-100%);
+      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .mobile-toggle {
+      display: flex;
+    }
+
+    .mobile-overlay.visible {
+      display: block;
+    }
+
+    .key-hints {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation">☰</button>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-course">MET 5537</div>
+      <div class="sidebar-title">Convection &<br><em>Atmospheric Turbulence</em></div>
+      <div class="sidebar-subtitle">Interactive study guides based on lectures by Prof. Allison Wing</div>
+    </div>
+
+    <div class="nav-list" id="navList"></div>
+
+    <div class="key-hints">
+      <div class="key-hint"><kbd>↑</kbd><kbd>↓</kbd> Navigate</div>
+      <div class="key-hint"><kbd>↵</kbd> Open</div>
+    </div>
+  </nav>
+
+  <main class="main" id="mainContent">
+    <div class="welcome" id="welcomeScreen">
+      <div class="welcome-inner">
+        <div class="welcome-icon">🌡️</div>
+        <div class="welcome-heading">Pick a topic from the sidebar to begin studying</div>
+        <div class="welcome-desc">
+          Each guide contains expandable concept cards with detailed notes and self-test flashcards covering the full lecture material.
+        </div>
+        <div class="welcome-grid">
+          <div class="welcome-stat">
+            <div class="welcome-stat-num">7</div>
+            <div class="welcome-stat-label">Guides</div>
+          </div>
+          <div class="welcome-stat">
+            <div class="welcome-stat-num">43</div>
+            <div class="welcome-stat-label">Topics</div>
+          </div>
+          <div class="welcome-stat">
+            <div class="welcome-stat-num">200+</div>
+            <div class="welcome-stat-label">Flashcards</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const guides = [
+  {
+    group: 'Foundations',
+    items: [
+      {
+        file: 'rayleigh-benard-study-guide.html',
+        title: 'Rayleigh-Bénard Convection',
+        sub: 'Ra, Pr, onset & turbulence',
+        color: '#f97316',
+        num: '01',
+      },
+      {
+        file: 'preliminaries-dry-convection-study-guide.html',
+        title: 'Preliminaries & Dry Convection',
+        sub: 'Buoyancy, stability, thermals',
+        color: '#e85d04',
+        num: '02',
+      },
+    ]
+  },
+  {
+    group: 'Boundary Layers',
+    items: [
+      {
+        file: 'convective-bl-study-guide.html',
+        title: 'Convective Boundary Layers',
+        sub: 'Scaling, structure, entrainment',
+        color: '#e85d04',
+        num: '03',
+      },
+      {
+        file: 'convective-boundary-layers-study-guide.html',
+        title: 'CBL Advanced Topics',
+        sub: 'TKE, thermals, mixed layer',
+        color: '#e85d04',
+        num: '04',
+      },
+    ]
+  },
+  {
+    group: 'Moist Convection',
+    items: [
+      {
+        file: 'shallow-cumulus-convection-study-guide.html',
+        title: 'Shallow Cumulus',
+        sub: 'Trade-wind Cu, LCL, mass flux',
+        color: '#f59e0b',
+        num: '05',
+      },
+      {
+        file: 'deep-cumulus-study-guide.html',
+        title: 'Deep Cumulus',
+        sub: 'CAPE, updrafts, storm types',
+        color: '#38bdf8',
+        num: '06',
+      },
+      {
+        file: 'stratocumulus-convection-study-guide.html',
+        title: 'Stratocumulus',
+        sub: 'Cloud-top cooling, decoupling',
+        color: '#0ea5e9',
+        num: '07',
+      },
+    ]
+  }
+];
+
+let activeFile = null;
+let focusedIndex = -1;
+const allItems = guides.flatMap(g => g.items);
+
+function buildNav() {
+  const navList = document.getElementById('navList');
+  navList.innerHTML = '';
+
+  let globalIndex = 0;
+  guides.forEach(group => {
+    const label = document.createElement('div');
+    label.className = 'nav-group-label';
+    label.textContent = group.group;
+    navList.appendChild(label);
+
+    group.items.forEach(item => {
+      const idx = globalIndex;
+      const el = document.createElement('div');
+      el.className = 'nav-item' + (activeFile === item.file ? ' active' : '');
+      el.style.setProperty('--active-color', item.color);
+      el.dataset.index = idx;
+      el.style.opacity = '0';
+      el.style.animation = `fadeSlideUp 0.35s ${0.1 + idx * 0.06}s forwards`;
+
+      el.innerHTML = `
+        <div class="nav-num">${item.num}</div>
+        <div class="nav-text">
+          <div class="nav-title">${item.title}</div>
+          <div class="nav-sub">${item.sub}</div>
+        </div>
+        <div class="nav-dot" style="background:${item.color}"></div>
+      `;
+
+      el.addEventListener('click', () => loadGuide(item.file));
+      navList.appendChild(el);
+      globalIndex++;
+    });
+  });
+}
+
+function loadGuide(file) {
+  activeFile = file;
+  focusedIndex = allItems.findIndex(i => i.file === file);
+
+  const main = document.getElementById('mainContent');
+  const welcome = document.getElementById('welcomeScreen');
+
+  // Remove welcome if present
+  if (welcome) welcome.remove();
+
+  // Remove existing iframe
+  const existing = main.querySelector('iframe');
+  if (existing) existing.remove();
+
+  const iframe = document.createElement('iframe');
+  iframe.className = 'content-frame';
+  iframe.src = file;
+  iframe.title = allItems[focusedIndex].title;
+  main.appendChild(iframe);
+
+  // Close mobile nav
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mobileOverlay').classList.remove('visible');
+
+  buildNav();
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    focusedIndex = Math.min(focusedIndex + 1, allItems.length - 1);
+    highlightFocused();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    focusedIndex = Math.max(focusedIndex - 1, 0);
+    highlightFocused();
+  } else if (e.key === 'Enter' && focusedIndex >= 0) {
+    e.preventDefault();
+    loadGuide(allItems[focusedIndex].file);
+  }
+});
+
+function highlightFocused() {
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.style.outline = '';
+  });
+  const target = document.querySelector(`.nav-item[data-index="${focusedIndex}"]`);
+  if (target) {
+    target.style.outline = `1px solid ${allItems[focusedIndex].color}44`;
+    target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+// Mobile toggle
+document.getElementById('mobileToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('mobileOverlay').classList.toggle('visible');
+});
+
+document.getElementById('mobileOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mobileOverlay').classList.remove('visible');
+});
+
+// Init
+buildNav();
+</script>
+</body>
+</html>

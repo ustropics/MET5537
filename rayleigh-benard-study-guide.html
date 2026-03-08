@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rayleigh-Bénard Conclusions</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Source+Serif+4:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Serif 4', serif; }
+  button { font-family: inherit; }
+  .concept-card { transition: border-color 0.3s ease; margin-bottom: 16px; border-radius: 16px; overflow: hidden; }
+  .concept-header { padding: 20px 24px; cursor: pointer; display: flex; align-items: center; gap: 16px; }
+  .concept-header:hover { opacity: 0.9; }
+  .arrow { transition: transform 0.3s ease; display: inline-block; }
+  .arrow.open { transform: rotate(180deg); }
+  .flashcard { border-radius: 12px; padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: transform 0.1s ease; }
+  .flashcard:hover { transform: scale(1.01); }
+  .flash-btn { padding: 8px 24px; border-radius: 8px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+  .flash-btn:hover { opacity: 0.85; }
+  .ref-grid-item { border-radius: 10px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// === DATA ===
+const COLORS = {
+  bg: "#0a0e17",
+  card: "#111827",
+  cardHover: "#1a2235",
+  accent: "#f97316",
+  accentDim: "#c2410c",
+  warm: "#fbbf24",
+  cool: "#38bdf8",
+  text: "#e2e8f0",
+  textDim: "#94a3b8",
+  border: "#1e293b",
+  success: "#22c55e",
+  successDim: "#166534",
+};
+
+const concepts = [
+  {
+    id: "controlling-numbers",
+    title: "Two Controlling Numbers: Ra & Pr",
+    icon: "⚙️",
+    color: COLORS.accent,
+    summary:
+      "Rayleigh-Bénard instability is governed by two dimensionless parameters: the Rayleigh number (Ra) and the Prandtl number (Pr).",
+    details: [
+      {
+        label: "Rayleigh Number (Ra)",
+        content:
+          "Ra = gβH³ΔT / (νκ) — a dimensionless temperature difference that defines the stability of the system. It represents the ratio of buoyancy forcing to viscous and thermal dissipation. When Ra exceeds a critical value (~660 for free-slip boundaries with n=1), convection begins.",
+      },
+      {
+        label: "Prandtl Number (Pr)",
+        content:
+          "Pr = ν/κ — the ratio of kinematic viscosity to thermal diffusivity. It doesn't control stability onset, but affects the behavior and structure of convection once it develops. For air, Pr ≈ 0.71; for water, Pr ≈ 7.",
+      },
+      {
+        label: "Critical Ra",
+        content:
+          "Rac(k) = (k² + n²π²)³ / k² — the neutral stability curve. The minimum Rac occurs at kc² = π²/2 (~660). Below this value, molecular diffusion of heat and momentum prevents overturning.",
+      },
+      {
+        label: "Dynamic Similarity",
+        content:
+          "Because the problem is controlled by dimensionless numbers, you can study the fluid phenomenon at any physical scale as long as Ra and Pr are matched — this is the principle of dynamic similarity.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What two dimensionless numbers control Rayleigh-Bénard convection?",
+        a: "Rayleigh number (Ra) and Prandtl number (Pr)",
+      },
+      {
+        q: "What is the physical interpretation of the Rayleigh number?",
+        a: "The ratio of buoyancy forcing to viscous and thermal dissipation — essentially a dimensionless temperature difference that defines stability.",
+      },
+      {
+        q: "What is the approximate minimum critical Ra for onset of convection (n=1, free-slip)?",
+        a: "~660, occurring at critical wavenumber kc² = π²/2",
+      },
+      {
+        q: "What does the Prandtl number control?",
+        a: "It doesn't control the onset of instability, but affects the behavior and structure of convection once it develops.",
+      },
+    ],
+  },
+  {
+    id: "lab-limitations",
+    title: "Lab Cannot Reach Atmospheric Regimes",
+    icon: "🔬",
+    color: COLORS.cool,
+    summary:
+      "We cannot push experimental parameters to the regimes needed to emulate real atmospheric convection in either Ra or aspect ratio.",
+    details: [
+      {
+        label: "Atmospheric Ra",
+        content:
+          "In atmospheric convecting layers, Ra ranges from ~10¹⁷ to 10²². This is extraordinarily turbulent — far beyond what any laboratory experiment has achieved.",
+      },
+      {
+        label: "Lab Ra",
+        content:
+          "The highest Ra achieved in laboratory Rayleigh-Bénard experiments is ~10¹¹. That's at least 6 orders of magnitude below the atmospheric regime.",
+      },
+      {
+        label: "Aspect Ratio Gap",
+        content:
+          "The aspect ratio (horizontal extent / depth) of atmospheric convection is also much larger than what can be achieved in the lab, making it impossible to capture the full geometry of atmospheric convecting layers.",
+      },
+      {
+        label: "Implication",
+        content:
+          "We rely on scaling laws (e.g., Nu ~ Raᵇ) and theoretical extrapolation to bridge this gap, but we don't know the exact scaling of the Nusselt number in extremely turbulent, high-Ra conditions.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is the typical range of Ra in atmospheric convecting layers?",
+        a: "Ra ~ 10¹⁷ to 10²²",
+      },
+      {
+        q: "What is the highest Ra achieved in laboratory experiments?",
+        a: "~10¹¹ — at least 6 orders of magnitude below atmospheric values",
+      },
+      {
+        q: "Besides Ra, what other parameter can't labs match for atmospheric convection?",
+        a: "The aspect ratio (horizontal extent relative to depth) of atmospheric convecting layers",
+      },
+    ],
+  },
+  {
+    id: "boundary-conditions",
+    title: "Boundary Conditions Differ Markedly",
+    icon: "🌍",
+    color: COLORS.warm,
+    summary:
+      "Real atmospheric convection differs from the idealized Rayleigh-Bénard setup in several fundamental ways related to boundary conditions.",
+    details: [
+      {
+        label: "Rough Surface",
+        content:
+          "Real Earth surfaces are rough, not smooth plates. At high Ra, surface roughness may matter more than molecular properties in determining heat transport — a major departure from classical R-B theory.",
+      },
+      {
+        label: "Internal Radiative Cooling",
+        content:
+          "The atmosphere is cooled internally by radiation, rather than only at the top boundary. This changes the effective forcing and structure of convection.",
+      },
+      {
+        label: "No Rigid Top Lid",
+        content:
+          "The atmosphere is not bounded above by a rigid plate. It's open at the top, which fundamentally changes the dynamics compared to a closed R-B cell.",
+      },
+      {
+        label: "Constant Flux vs. Constant Temperature",
+        content:
+          "The relevant atmospheric boundary condition is probably closer to constant heat flux rather than the constant temperature assumed in classical R-B. This changes stability criteria and convective behavior.",
+      },
+      {
+        label: "Other Real-World Effects",
+        content:
+          "The real atmosphere also has rotation (Coriolis), mean winds and shear, and moisture — all absent from the basic R-B setup. Rotation introduces the Taylor number and can stabilize the system.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Name 4 ways real atmospheric boundary conditions differ from R-B assumptions.",
+        a: "1) Rough surface (not smooth), 2) Internal radiative cooling, 3) No rigid top lid, 4) Constant flux rather than constant temperature boundary condition",
+      },
+      {
+        q: "Why might surface roughness be more important than molecular diffusion at high Ra?",
+        a: "In high-Ra fully turbulent R-B convection, molecular diffusion operates through shrinkingly thin boundary layers over smooth surfaces. In reality, surface roughness disrupts these layers and may dominate heat transport.",
+      },
+      {
+        q: "What additional parameter does rotation introduce?",
+        a: "The Taylor number, To = f²H⁴/ν², which measures the relative importance of Coriolis vs. viscous accelerations",
+      },
+    ],
+  },
+  {
+    id: "temperature-profile",
+    title: "Convectively Neutral Interior",
+    icon: "📊",
+    color: "#a78bfa",
+    summary:
+      "At high Ra, the interior of the fluid develops a convectively neutral average temperature profile, with gradients confined to thin boundary layers.",
+    details: [
+      {
+        label: "Temperature Profile Evolution",
+        content:
+          "As Ra increases, the initially linear temperature gradient collapses. Temperature gradients become confined to thin diffusive boundary layers near the top and bottom plates, while the interior becomes nearly isothermal.",
+      },
+      {
+        label: "Why Isothermal?",
+        content:
+          "Vigorous convective mixing in the interior homogenizes the temperature. The convectively neutral profile (isothermal for a Boussinesq fluid) is the natural state that convection drives toward, analogous to how atmospheric convection drives toward a dry adiabat.",
+      },
+      {
+        label: "Nusselt Number Scaling",
+        content:
+          "The Nusselt number Nu = F_conv / (κΔT/H) measures convective efficiency. If Nu ~ Ra^(1/3), heat transport is independent of H. A velocity scaling of w' ~ (gβΔT)^(1/2) would give Nu ~ Ra^(1/2), but the true scaling at extreme Ra remains unknown.",
+      },
+      {
+        label: "Boundary Layers",
+        content:
+          "Even in fully turbulent high-Ra convection, molecular diffusion remains critical through shrinkingly thin diffusive boundary layers near the smooth surfaces. This is a key limitation of the R-B framework.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What happens to the temperature profile as Ra increases in R-B convection?",
+        a: "Temperature gradients collapse into thin diffusive boundary layers near the plates, and the interior becomes nearly isothermal (convectively neutral).",
+      },
+      {
+        q: "What is the Nusselt number?",
+        a: "Nu = F_conv / (κΔT/H) — the ratio of convective to conductive heat transport",
+      },
+      {
+        q: "What Nu-Ra scaling would make convective heat transport independent of the fluid depth H?",
+        a: "Nu ~ Ra^(1/3)",
+      },
+    ],
+  },
+];
+
+const referenceSections = [];
+
+// === STATE ===
+let openId = null;
+const flashcardState = {};
+
+function initFlashcardState(cards, prefix) {
+  if (!flashcardState[prefix]) {
+    flashcardState[prefix] = { index: 0, flipped: false, results: [] };
+  }
+}
+
+// === RENDER ===
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const root = el('div', {
+    style: `min-height:100vh;background:${COLORS.bg};padding:40px 20px;font-family:'Source Serif 4',serif;`
+  });
+
+  const container = el('div', { style: 'max-width:720px;margin:0 auto;' });
+
+  // Header
+  container.appendChild(el('div', { style: 'text-align:center;margin-bottom:48px;' }, [
+    el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.accent};text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;`,
+      text: "MET 5537 — Study Guide"
+    }),
+    el('h1', {
+      style: `font-family:'Fraunces',serif;font-size:36px;font-weight:700;color:${COLORS.text};line-height:1.2;margin:0;`,
+      html: `Rayleigh-Bénard<br><span style="color:${COLORS.accent}">Conclusions</span>`
+    }),
+    el('p', {
+      style: `font-size:15px;color:${COLORS.textDim};margin-top:16px;line-height:1.6;max-width:500px;margin-left:auto;margin-right:auto;`,
+      text: "Expand each topic for detailed notes and self-test flashcards drawn from the lecture conclusions."
+    }),
+  ]));
+
+  // Concept Cards
+  concepts.forEach(c => {
+    container.appendChild(renderConceptCard(c));
+  });
+
+  // Reference Sections
+  referenceSections.forEach(sec => {
+    container.appendChild(renderReferenceSection(sec));
+  });
+
+  // Footer
+  container.appendChild(el('div', {
+    style: `margin-top:32px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};`,
+    text: "Based on lectures by Prof. Allison Wing — MET 5537"
+  }));
+
+  root.appendChild(container);
+  app.appendChild(root);
+}
+
+function renderConceptCard(c) {
+  const isOpen = openId === c.id;
+  const card = el('div', {
+    class: 'concept-card',
+    style: `background:${COLORS.card};border:1px solid ${isOpen ? c.color : COLORS.border};`
+  });
+
+  // Header
+  const header = el('div', { class: 'concept-header' }, [
+    el('span', { style: 'font-size:28px;', text: c.icon }),
+    el('div', { style: 'flex:1;' }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.text};font-weight:600;`,
+        text: c.title
+      }),
+      el('div', {
+        style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.textDim};margin-top:4px;line-height:1.5;`,
+        text: c.summary
+      }),
+    ]),
+    el('span', {
+      class: 'arrow' + (isOpen ? ' open' : ''),
+      style: `color:${c.color};font-size:20px;`,
+      text: '▾'
+    }),
+  ]);
+
+  header.onclick = () => { openId = (openId === c.id) ? null : c.id; render(); };
+  card.appendChild(header);
+
+  if (isOpen) {
+    const body = el('div', { style: 'padding:0 24px 24px;' });
+    body.appendChild(el('div', { style: `height:1px;background:${COLORS.border};margin-bottom:20px;` }));
+
+    // Key Details label
+    body.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;`,
+      text: 'Key Details'
+    }));
+
+    // Details
+    c.details.forEach(d => {
+      body.appendChild(el('div', {
+        style: `margin-bottom:16px;padding-left:16px;border-left:2px solid ${c.color}33;`
+      }, [
+        el('div', {
+          style: `font-family:'Fraunces',serif;font-size:15px;color:${c.color};font-weight:600;margin-bottom:4px;`,
+          text: d.label
+        }),
+        el('div', {
+          style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.text};line-height:1.7;opacity:0.9;`,
+          text: d.content
+        }),
+      ]));
+    });
+
+    // Flashcards
+    body.appendChild(el('div', {
+      style: `margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;`,
+      text: 'Self-Test Flashcards'
+    }));
+    body.appendChild(renderFlashcardDeck(c.flashcards, c.color, c.id));
+
+    card.appendChild(body);
+  }
+
+  return card;
+}
+
+function renderFlashcardDeck(cards, color, prefix) {
+  initFlashcardState(cards, prefix);
+  const state = flashcardState[prefix];
+  const deck = el('div');
+
+  if (state.index >= cards.length) {
+    // Results
+    const correct = state.results.filter(r => r).length;
+    const pct = Math.round((correct / cards.length) * 100);
+    const results = el('div', {
+      style: `background:${COLORS.success}11;border:1px solid ${COLORS.success}33;border-radius:12px;padding:20px;text-align:center;`
+    }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.success};margin-bottom:8px;`,
+        text: `${pct}% — ${correct}/${cards.length} correct`
+      }),
+      el('div', {
+        style: `font-size:13px;color:${COLORS.textDim};margin-bottom:16px;`,
+        text: pct === 100 ? 'Perfect score!' : pct >= 70 ? 'Good job! Review the ones you missed.' : 'Keep studying — you\'ll get there!'
+      }),
+    ]);
+    const resetBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${color}22;border:1px solid ${color};color:${color};`,
+      text: 'Reset'
+    });
+    resetBtn.onclick = () => { flashcardState[prefix] = { index: 0, flipped: false, results: [] }; render(); };
+    results.appendChild(resetBtn);
+    deck.appendChild(results);
+    return deck;
+  }
+
+  const card = cards[state.index];
+  const fc = el('div', {
+    class: 'flashcard',
+    style: `background:${state.flipped ? color + '11' : COLORS.card.replace('#', '#')};border:1px solid ${state.flipped ? color : COLORS.border};`
+  });
+
+  // Counter
+  fc.appendChild(el('div', {
+    style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:12px;`,
+    text: `${state.index + 1} / ${cards.length}`
+  }));
+
+  if (!state.flipped) {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.q
+    }));
+    fc.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-top:12px;`,
+      text: 'Click to reveal'
+    }));
+    fc.onclick = () => { state.flipped = true; render(); };
+  } else {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.a
+    }));
+    fc.onclick = null;
+  }
+
+  deck.appendChild(fc);
+
+  if (state.flipped) {
+    const btnRow = el('div', { style: 'display:flex;gap:12px;margin-top:12px;justify-content:center;' });
+    const missBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.accent}22;border:1px solid ${COLORS.accent || '#f97316'};color:#fdba74;`,
+      text: 'Missed it'
+    });
+    missBtn.onclick = () => { state.results.push(false); state.index++; state.flipped = false; render(); };
+    const gotBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.success}22;border:1px solid ${COLORS.success};color:#86efac;`,
+      text: 'Got it!'
+    });
+    gotBtn.onclick = () => { state.results.push(true); state.index++; state.flipped = false; render(); };
+    btnRow.appendChild(missBtn);
+    btnRow.appendChild(gotBtn);
+    deck.appendChild(btnRow);
+  }
+
+  return deck;
+}
+
+function renderReferenceSection(sec) {
+  const isQuickRef = sec.title.toLowerCase().includes('quick reference');
+  const wrapper = el('div', {
+    style: `margin-top:${isQuickRef ? 32 : 16}px;background:${isQuickRef ? sec.color + '08' : COLORS.card};border:1px solid ${isQuickRef ? sec.color + '33' : COLORS.border};border-radius:16px;padding:24px;`
+  });
+
+  wrapper.appendChild(el('div', {
+    style: `font-family:'Fraunces',serif;font-size:18px;color:${isQuickRef ? sec.color : COLORS.text};font-weight:600;margin-bottom:16px;`,
+    text: sec.title
+  }));
+
+  const grid = el('div', {
+    style: `display:grid;grid-template-columns:${sec.gridCols};gap:${sec.valueKey === 'val' ? 8 : 12}px;${sec.valueKey === 'val' ? "font-family:'IBM Plex Mono',monospace;font-size:13px;" : ''}`
+  });
+
+  sec.items.forEach(item => {
+    if (sec.valueKey === 'val') {
+      const row = el('div', {
+        style: `display:flex;justify-content:space-between;padding:8px 12px;background:${COLORS.bg}88;border-radius:8px;`
+      }, [
+        el('span', { style: `color:${COLORS.textDim};`, text: item.label }),
+        el('span', { style: `color:${COLORS.text};`, text: item.val }),
+      ]);
+      grid.appendChild(row);
+    } else if (sec.valueKey === 'desc') {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.warm};margin-bottom:4px;font-weight:500;`, text: item.label }),
+        el('div', { style: `font-family:'Source Serif 4',serif;font-size:13px;color:${COLORS.textDim};line-height:1.5;`, text: item.desc }),
+      ]);
+      grid.appendChild(cell);
+    } else {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:4px;`, text: item.label }),
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:14px;color:${COLORS.warm};`, text: item.eq }),
+      ]);
+      grid.appendChild(cell);
+    }
+  });
+
+  wrapper.appendChild(grid);
+  return wrapper;
+}
+
+// === DOM HELPER ===
+function el(tag, opts, children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.style) e.setAttribute('style', opts.style);
+    if (opts.class) e.className = opts.class;
+    if (opts.text) e.textContent = opts.text;
+    if (opts.html) e.innerHTML = opts.html;
+  }
+  if (children) children.forEach(c => { if (c) e.appendChild(c); });
+  return e;
+}
+
+// === INIT ===
+render();
+</script>
+</body>
+</html>

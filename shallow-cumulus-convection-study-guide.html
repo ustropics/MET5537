@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shallow Cumulus Convection</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Source+Serif+4:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Serif 4', serif; }
+  button { font-family: inherit; }
+  .concept-card { transition: border-color 0.3s ease; margin-bottom: 16px; border-radius: 16px; overflow: hidden; }
+  .concept-header { padding: 20px 24px; cursor: pointer; display: flex; align-items: center; gap: 16px; }
+  .concept-header:hover { opacity: 0.9; }
+  .arrow { transition: transform 0.3s ease; display: inline-block; }
+  .arrow.open { transform: rotate(180deg); }
+  .flashcard { border-radius: 12px; padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: transform 0.1s ease; }
+  .flashcard:hover { transform: scale(1.01); }
+  .flash-btn { padding: 8px 24px; border-radius: 8px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+  .flash-btn:hover { opacity: 0.85; }
+  .ref-grid-item { border-radius: 10px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// === DATA ===
+const COLORS = {
+  bg: "#0b0f1a",
+  card: "#111827",
+  accent: "#f59e0b",
+  warm: "#fbbf24",
+  cool: "#38bdf8",
+  violet: "#a78bfa",
+  emerald: "#34d399",
+  rose: "#fb7185",
+  slate: "#64748b",
+  teal: "#2dd4bf",
+  text: "#e2e8f0",
+  textDim: "#94a3b8",
+  border: "#1e293b",
+  success: "#22c55e",
+  successDim: "#166534",
+};
+
+const concepts = [
+  {
+    id: "cu-basics",
+    title: "What Are Trade Wind Cumuli?",
+    icon: "⛅",
+    color: COLORS.cool,
+    summary:
+      "Trade wind cumuli are small, scattered, short-lived convective clouds confined to a shallow layer (<2 km). They are ubiquitous over tropical and subtropical oceans and play a key role in maintaining the trade wind inversion.",
+    details: [
+      {
+        label: "Physical Characteristics",
+        content:
+          "Shallow cumulus are confined to a layer less than 2 km deep, have short lifetimes, and are generally non-precipitating (though this is not strictly true — they can drizzle). They span large expanses of ocean in the trade wind regions and are also common over land during fair weather.",
+      },
+      {
+        label: "Up-Moist, Down-Dry Asymmetry",
+        content:
+          "Unlike dry convection, shallow cumulus have a fundamental asymmetry between updrafts and downdrafts. Updrafts are saturated and extract energy from the flow via condensation. Downdrafts are unsaturated and do work on the flow. This 'up-moist, down-dry' asymmetry means clouds occupy only a small area fraction of the domain.",
+      },
+      {
+        label: "Role of Mixing",
+        content:
+          "Shallow cumulus act irreversibly only through local mixing with the environment — similar to dry convection in that sense. Penetrating cumuli entrain environmental air; some of the mixed air becomes negatively buoyant and accelerates downward, creating the compensating subsidence pattern.",
+      },
+      {
+        label: "Climate Importance",
+        content:
+          "Shallow cumulus are so ubiquitous that their differing response to warming explains much of the intermodel spread in climate sensitivity across global climate models. Understanding what controls shallow cloud fraction is one of the central unsolved problems in climate science.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is the 'up-moist, down-dry' asymmetry in shallow cumulus and what does it imply?",
+        a: "Updrafts are saturated (extract energy via condensation) while downdrafts are unsaturated (do work on the flow). This means clouds occupy only a small area fraction — unlike dry convection where up and down drafts are more symmetric.",
+      },
+      {
+        q: "How deep is the typical shallow cumulus layer and what is the subcloud layer depth over ocean?",
+        a: "The cumulus layer extends to <2 km total. The subcloud layer over ocean is typically 600–800 m deep.",
+      },
+      {
+        q: "Why are shallow cumulus important for climate sensitivity?",
+        a: "They are so ubiquitous that differing model representations of their response to warming explain much of the intermodel spread in climate sensitivity.",
+      },
+      {
+        q: "In what way are shallow cumulus similar to dry convection?",
+        a: "They act irreversibly only through local mixing with the environment. But unlike dry convection, they have an up-moist/down-dry asymmetry.",
+      },
+    ],
+  },
+  {
+    id: "sc-vs-cu",
+    title: "Stratocumulus vs. Trade Cumulus Environments",
+    icon: "🔄",
+    color: COLORS.violet,
+    summary:
+      "Stratocumulus and trade cumulus represent two ends of a spectrum of low-cloud regimes. Sc occur over cooler SSTs with stronger inversions and shallower, well-mixed BLs; trade Cu occur over warmer SSTs with weaker inversions and deeper, decoupled BLs.",
+    details: [
+      {
+        label: "Stratocumulus Environment",
+        content:
+          "Colder SSTs, stronger inversion, shallower boundary layer, well-mixed through the entire BL depth, saturated at the top of the BL. The BL is a single well-mixed slab capped by cloud.",
+      },
+      {
+        label: "Trade Cumulus Environment",
+        content:
+          "Warmer SSTs, weaker inversion, deeper boundary layer, shallow well-mixed subcloud layer only, unsaturated in the BL (conditionally unstable cloud layer above). The BL is decoupled — the subcloud and cloud layers have distinct thermodynamic structures.",
+      },
+      {
+        label: "The Sc-to-Cu Transition",
+        content:
+          "As air advects equatorward over progressively warmer water, the STBL deepens, eventually decouples, and transitions from stratocumulus to trade cumulus. This Sc-to-Cu transition is a continuous process driven by increasing SST and weakening inversion stability.",
+      },
+      {
+        label: "Key Structural Difference",
+        content:
+          "In the Sc regime, one mixed layer model (MLM) describes the whole BL. In the Cu regime, the BL must be treated as at least two layers: a well-mixed subcloud layer and a conditionally unstable cloud layer with distinct properties, connected by cumulus mass flux.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "List three key environmental differences between Sc and trade Cu regimes.",
+        a: "Sc: colder SSTs, stronger inversion, shallower well-mixed BL. Trade Cu: warmer SSTs, weaker inversion, deeper decoupled BL with distinct subcloud and cloud layers.",
+      },
+      {
+        q: "Why can't a single mixed layer model describe the trade cumulus BL?",
+        a: "The BL is decoupled — the subcloud layer is well-mixed but the cloud layer above is conditionally unstable with different thermodynamic properties. At least a two-layer model is needed.",
+      },
+      {
+        q: "What drives the transition from stratocumulus to trade cumulus?",
+        a: "As air advects over warmer water, SST increases, inversion stability weakens, the BL deepens and decouples — transitioning from a single well-mixed Sc layer to a decoupled Cu regime.",
+      },
+    ],
+  },
+  {
+    id: "tw-bl-structure",
+    title: "Trade Wind Boundary Layer Structure",
+    icon: "📊",
+    color: COLORS.emerald,
+    summary:
+      "The trade wind BL has four distinct layers: a well-mixed subcloud layer, a transition layer, a conditionally unstable cloud layer, and an inversion layer — quite different from the single well-mixed STBL.",
+    details: [
+      {
+        label: "Subcloud Layer (Surface to ~600–800 m)",
+        content:
+          "Well-mixed, extending from the surface to near cloud base. Its turbulent structure is similar to a dry convective boundary layer — driven by surface heat and moisture fluxes. Profiles of θ and q are approximately uniform.",
+      },
+      {
+        label: "Transition Layer (~100–300 m thick)",
+        content:
+          "Marked by a decrease in specific humidity (qᵥ) of more than 1 g/kg and a slightly enhanced lapse rate. This layer separates the well-mixed subcloud layer from the cloud layer above.",
+      },
+      {
+        label: "Cloud Layer (Conditionally Unstable)",
+        content:
+          "Above the transition layer, the atmosphere is conditionally unstable — meaning unsaturated air is stable but saturated air (in cumulus updrafts) is buoyant. A spectrum of cumuli exists, with only the tallest penetrating up to the trade inversion. Cloud fraction is small.",
+      },
+      {
+        label: "Inversion Layer (Several 100 m thick)",
+        content:
+          "The trade inversion is thicker and weaker than the Sc inversion (which is only a few meters thick but 10–20 K strong). Increased gradients of liquid water in the inversion layer and small cloud fraction indicate that only rare, strong plumes penetrate into the stably stratified environment above.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Name the four layers of the trade wind boundary layer from bottom to top.",
+        a: "Subcloud layer (well-mixed, ~600–800 m) → Transition layer (~100–300 m, qᵥ drops >1 g/kg) → Cloud layer (conditionally unstable) → Inversion layer (several 100 m thick).",
+      },
+      {
+        q: "How does the trade inversion differ from the stratocumulus inversion?",
+        a: "The trade inversion is thicker (several 100 m) and weaker. The Sc inversion is very thin (few meters) but very strong (10–20 K).",
+      },
+      {
+        q: "What does 'conditionally unstable' mean in the context of the cloud layer?",
+        a: "Unsaturated air is stable (won't convect), but saturated air — i.e., air within cumulus updrafts — is buoyant and will rise. Convection occurs only where air is lifted to saturation.",
+      },
+      {
+        q: "What is the turbulent structure of the subcloud layer similar to?",
+        a: "A dry convective boundary layer — driven by surface heat and moisture fluxes, with well-mixed profiles.",
+      },
+    ],
+  },
+  {
+    id: "basic-physics",
+    title: "Basic Physics of the Trade Cumulus Layer",
+    icon: "⚡",
+    color: COLORS.warm,
+    summary:
+      "Radiative cooling drives subsidence in the environment between clouds. Where subsidence weakens near the surface, convective instability develops. Cumulus clouds then help balance the radiative cooling and maintain the trade inversion.",
+    details: [
+      {
+        label: "Radiative-Subsidence Balance",
+        content:
+          "Above the trade inversion and between clouds, there is a radiative-subsidence balance: the environment subsides at a rate that increases upward through the BL depth. Near the surface, the subsidence rate goes to zero, so radiative cooling can no longer be compensated by subsidence alone.",
+      },
+      {
+        label: "Why Convection Occurs",
+        content:
+          "As air subsides and approaches the surface, it cools radiatively until it becomes convectively unstable with respect to the sea surface. Convective heat transport then helps balance the radiative cooling in the subcloud layer. Without this convection, the lower atmosphere would cool indefinitely.",
+      },
+      {
+        label: "Maintaining the Trade Inversion",
+        content:
+          "Near cumulus tops, clouds cool the atmosphere by evaporating water into it, helping maintain the trade inversion. The tallest cumuli penetrate the inversion, entrain environmental air, and produce negatively buoyant mixtures that sink — a key process in the trade wind BL energy balance.",
+      },
+      {
+        label: "Compensating Subsidence",
+        content:
+          "The cumulus mass flux must change sign through the cloud layer: positive (upward) at cloud base, negative near cloud tops (penetrative downdrafts). In the inversion layer, 'compensating ascent' partially cancels ambient subsidence, causing environmental air to descend more slowly and cool radiatively for longer.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Why does convection occur in the trade cumulus boundary layer?",
+        a: "Near the surface, subsidence goes to zero so radiative cooling cannot be balanced by subsidence alone. Air cools until it becomes convectively unstable relative to the sea surface, triggering convective heat transport.",
+      },
+      {
+        q: "How do shallow cumuli help maintain the trade inversion?",
+        a: "Near cloud tops, they cool the atmosphere by evaporating water into it. Penetrating cumuli entrain dry air, produce negatively buoyant mixtures that descend, maintaining the stable layer.",
+      },
+      {
+        q: "Why must the cumulus mass flux change sign through the cloud layer?",
+        a: "Because the vertical integral of the cloud-induced tendency of hₗᵥ must vanish (hₗᵥ is conserved for non-precipitating clouds). This requires Mc to be positive lower in the cloud and negative near the tops (penetrative downdrafts).",
+      },
+      {
+        q: "What is 'compensating subsidence' and where does it occur?",
+        a: "In the inversion layer, Mc < 0, meaning there is net upward motion in the non-cloud environment that partially cancels ambient subsidence. Air descends more slowly through the inversion, spending more time there and cooling radiatively.",
+      },
+    ],
+  },
+  {
+    id: "mass-flux",
+    title: "Mass Flux Model for Cumulus Ensembles",
+    icon: "🧮",
+    color: COLORS.rose,
+    summary:
+      "The mass flux approach models cumulus effects by considering a single plume whose properties represent the ensemble average. The turbulent flux is F = M(φᶜ − φ̄), where M is cumulus mass flux, φᶜ is the cloud value, and φ̄ is the environment.",
+    details: [
+      {
+        label: "Core Idea",
+        content:
+          "Most theoretical models consider how cumulus clouds produce a tendency to the mean state: ∂φ/∂t|clouds = −∂Fφ/∂z, where Fφ is the turbulent flux of φ associated with cumulus. The mass flux approach represents this flux as Fφ = M(φᶜ − φ̄)/ρ, considering a single plume whose properties equal the ensemble average.",
+      },
+      {
+        label: "Mass Flux and Entrainment/Detrainment",
+        content:
+          "The cumulus mass flux M evolves with height according to: ∂M/∂z = (ε − δ)M, where ε is the fractional entrainment rate (rate at which environmental air is incorporated into the cloud, diluting its properties) and δ is the fractional detrainment rate (rate at which cloud mass is lost to the environment).",
+      },
+      {
+        label: "Cloud Variable Evolution",
+        content:
+          "The in-cloud variable evolves as: ∂φᶜ/∂z = −ε(φᶜ − φ̄). Entrainment dilutes the cloud properties toward environmental values. The profiles of mass flux and cloud variables depend critically on the entrainment and detrainment rates.",
+      },
+      {
+        label: "What Needs to Be Specified",
+        content:
+          "To close the model, you need: (1) a closure for entrainment and detrainment rates, (2) boundary conditions for cloud values at cloud base, and (3) a method for determining the depth of the cloud layer. This is fundamentally the same closure problem as in the STBL, but more difficult because the BL is not well-mixed.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Write the mass flux representation of cumulus turbulent flux and explain each term.",
+        a: "Fφ = M(φᶜ − φ̄)/ρ. M = cumulus mass flux, φᶜ = cloud ensemble property, φ̄ = environmental mean, ρ = density. The flux is carried by a single representative plume.",
+      },
+      {
+        q: "How does the cumulus mass flux change with height and what controls it?",
+        a: "∂M/∂z = (ε − δ)M, where ε is the fractional entrainment rate and δ is the fractional detrainment rate. M increases where entrainment exceeds detrainment and decreases where detrainment dominates.",
+      },
+      {
+        q: "What three things need to be specified to close the mass flux model?",
+        a: "(1) Closure for entrainment/detrainment rates, (2) boundary conditions at cloud base, (3) method for determining cloud layer depth.",
+      },
+      {
+        q: "How does entrainment affect the in-cloud variable φᶜ?",
+        a: "∂φᶜ/∂z = −ε(φᶜ − φ̄). Entrainment dilutes cloud properties toward environmental values — the cloud becomes more like its environment as it entrains more.",
+      },
+    ],
+  },
+  {
+    id: "simple-model",
+    title: "Simple Model of the Trade Cumulus BL",
+    icon: "📐",
+    color: COLORS.teal,
+    summary:
+      "A two-layer bulk model with piecewise-linear profiles of hₗᵥ and r, using budgets for the subcloud layer, cloud layer, inversion, and whole BL to solve for the thermodynamic structure and cumulus mass fluxes.",
+    details: [
+      {
+        label: "Model Setup",
+        content:
+          "Piecewise linear distributions of hₗᵥ (virtual liquid water static energy) and r (mixing ratio). No precipitation. Mean vertical velocity increases linearly with height. Must specify SST, and w, r, hₗᵥ at the top of the divergence layer. The model solves for hₗᵥ and r in each layer, cloud base, inversion depth, and updraft/downdraft mass fluxes (Mᵤ, Mᵈ).",
+      },
+      {
+        label: "Key Balances — Cloud Layer",
+        content:
+          "Between cloud base and base of trade inversion: radiative cooling is balanced by downward advection of hₗᵥ between clouds. The cumulus net mass flux is Mc = Mᵤ − Mᵈ.",
+      },
+      {
+        label: "Key Balances — Inversion & Whole BL",
+        content:
+          "In the inversion: radiative cooling balanced by subsidence between clouds; subsidence drying balanced by detrainment of water from clouds. For the whole BL: mean downward advection balanced by surface fluxes and radiative cooling; subsidence drying balanced by surface evaporation.",
+      },
+      {
+        label: "Condition for Convection",
+        content:
+          "For Mᵤ, Mᵈ > 0 (convection occurring), radiative cooling must be more than sufficient to compensate for mean subsidence. If not, subsidence alone can balance the cooling and no cumulus convection is needed. This approximately requires Q_BL < Q (BL radiative cooling rate less than total). The model's critical closure: energy consumed by overshooting negatively buoyant air balances energy generated in the updraft.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is the condition for cumulus convection to occur in the simple model?",
+        a: "Radiative cooling must exceed what can be compensated by subsidence alone (approximately Q_BL < Q). Otherwise, subsidence alone balances the cooling and no convection is needed.",
+      },
+      {
+        q: "What is the critical closure assumption of the simple trade cumulus BL model?",
+        a: "Energy consumed by negatively buoyant, overshooting air at cloud top balances the generation of energy in the updraft.",
+      },
+      {
+        q: "What does the model solve for, given SST and upper boundary conditions?",
+        a: "hₗᵥ and r in the subcloud layer, r just above cloud base, hₗᵥ and r at base of inversion, inversion depth, cloud base height, and updraft/downdraft mass fluxes.",
+      },
+      {
+        q: "What balances subsidence drying in the inversion layer?",
+        a: "Detrainment of water from cumulus clouds — the tallest cumuli penetrate the inversion and detrain moisture.",
+      },
+    ],
+  },
+  {
+    id: "hlv-budget",
+    title: "Virtual Liquid Water Static Energy (hₗᵥ) Budget",
+    icon: "🔬",
+    color: COLORS.accent,
+    summary:
+      "hₗᵥ is conserved for non-precipitating cumulus, so clouds cannot change its mass-weighted vertical integral. The only cloud contribution to the environment's hₗᵥ budget is through compensating subsidence — a powerful constraint.",
+    details: [
+      {
+        label: "What is hₗᵥ?",
+        content:
+          "Virtual liquid water static energy: hₗᵥ = cₚd[(ε + rₜ)/(ε + rₜ − rₗ)]Tᵥ + gz − Lᵥrₗ. It is conserved under adiabatic processes (including condensation/evaporation without precipitation). If no liquid water, it reduces to hₗᵥ = cₚdTᵥ + gz. It is analogous to liquid water potential temperature θₗ.",
+      },
+      {
+        label: "Conservation Constraint",
+        content:
+          "Because clouds don't precipitate, they cannot change the mass-weighted vertical integral of hₗᵥ over the cloud layer. Clouds transport hₗᵥ vertically and detrain to the environment, but the net column effect on hₗᵥ is zero. This is a very powerful constraint on the cloud layer budget.",
+      },
+      {
+        label: "Environmental Budget",
+        content:
+          "In the cloud environment: ρ ∂hₗᵥ/∂t = −ρū·∇hₗᵥ + Mc ∂hₗᵥ/∂z + D(hₗᵥ,c − hₗᵥ) + ρQ̇. The cloud contribution is only through advection by compensating subsidence (Mc ∂hₗᵥ/∂z). Detraining air is assumed to be at neutral buoyancy, and the cloud fraction is small enough that environmental hₗᵥ ≈ mean hₗᵥ.",
+      },
+      {
+        label: "Key Assumptions",
+        content:
+          "Air detrains at neutral buoyancy (still part of the cloudy updraft until condensed water evaporates and it becomes neutrally buoyant). Environmental hₗᵥ ≈ total mean hₗᵥ because clouds are a small fraction of the domain. These simplifications allow the model to be tractable but introduce some inconsistencies.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Why can clouds not change the mass-weighted vertical integral of hₗᵥ?",
+        a: "Because hₗᵥ is conserved for non-precipitating clouds. Clouds redistribute hₗᵥ vertically but cannot create or destroy it, so the column integral is unchanged.",
+      },
+      {
+        q: "Through what mechanism do cumulus clouds affect the environmental hₗᵥ budget?",
+        a: "Only through advection by compensating subsidence: ρ(∂hₗᵥ/∂t)|clouds = Mc ∂hₗᵥ/∂z. Direct detrainment effects cancel because air detrains at neutral buoyancy.",
+      },
+      {
+        q: "What is hₗᵥ and what does it reduce to in the absence of liquid water?",
+        a: "Virtual liquid water static energy, conserved under adiabatic processes. Without liquid: hₗᵥ = cₚdTᵥ + gz (just the dry static energy adjusted for virtual temperature).",
+      },
+      {
+        q: "Why is the assumption that environmental hₗᵥ ≈ mean hₗᵥ reasonable?",
+        a: "Because shallow cumulus occupy only a small area fraction of the domain, so the cloud contribution to the domain-mean is negligible.",
+      },
+    ],
+  },
+  {
+    id: "climate-change",
+    title: "Shallow Cumulus & Climate Change",
+    icon: "🌡️",
+    color: COLORS.rose,
+    summary:
+      "The response of shallow cumulus to warming is a major source of uncertainty in climate projections. The mixing-desiccation hypothesis predicted cloud loss with warming, but EUREC4A observations support mesoscale motion control instead.",
+    details: [
+      {
+        label: "Why It Matters",
+        content:
+          "Model diversity in the strength of lower-tropospheric moisture mixing explains roughly half the variance in climate sensitivity across GCMs (Sherwood et al. 2014). Models tuned with different mixing representations produce very different climate sensitivities and shallow cloud changes with warming (Bony et al. 2017).",
+      },
+      {
+        label: "Mixing-Desiccation Hypothesis",
+        content:
+          "Proposes that lower-tropospheric mixing increases with warming, dehydrating the cloud layer near its base and reducing shallow cloud fraction. The rate of desiccation scales with mixing strength in the current climate. If true, cloud fraction C ∝ relative humidity R ∝ M⁻¹ (mass flux at cloud base).",
+      },
+      {
+        label: "EUREC4A & the Cumulus Valve Mechanism",
+        content:
+          "EUREC4A was designed to test the mixing-desiccation hypothesis. Observations show that clouds act as a 'valve' maintaining the top of the subcloud layer close to the LCL, regulating the area covered by cumulus updrafts at cloud base. LES and observations indicate shallow cumulus fraction at cloud base doesn't change much with warming.",
+      },
+      {
+        label: "Mesoscale Motion Control",
+        content:
+          "EUREC4A results (Vogel et al. 2022) show that variability in mixing is counteracted by variability in mesoscale vertical motion (W). M is controlled equally by entrainment (E) and W, and these have opposite effects on relative humidity — so M is uncorrelated with RH. Dynamic factors (M, W) dominate cloud fraction control, not thermodynamic factors. This suggests extreme climate sensitivity is less likely than previously thought.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is the mixing-desiccation hypothesis?",
+        a: "Lower-tropospheric mixing increases with warming, dehydrating the cloud layer near its base, reducing shallow cloud fraction. The desiccation rate scales with current-climate mixing strength.",
+      },
+      {
+        q: "What did EUREC4A observations find about the mixing-desiccation hypothesis?",
+        a: "Variability in mixing is counteracted by mesoscale vertical motion. No drying of the cloud layer or decrease in cloudiness with stronger mixing. Dynamic factors (M, W) control cloud fraction, not thermodynamics. This refutes mixing-desiccation.",
+      },
+      {
+        q: "What is the 'cumulus valve mechanism'?",
+        a: "Clouds act as a valve that maintains the top of the subcloud layer close to the LCL, regulating the area covered by cumulus updrafts at cloud base — providing a self-regulating feedback.",
+      },
+      {
+        q: "How much of the variance in climate sensitivity across GCMs does lower-tropospheric mixing diversity explain?",
+        a: "Approximately half, according to Sherwood et al. (2014).",
+      },
+      {
+        q: "Why does mesoscale motion control make extreme climate sensitivity less likely?",
+        a: "Because M is controlled equally by E and W (which have opposite effects on RH), cloud fraction doesn't decrease with enhanced mixing — undermining the mechanism that would produce large positive cloud feedbacks.",
+      },
+    ],
+  },
+];
+
+const referenceSections = [];
+
+// === STATE ===
+let openId = null;
+const flashcardState = {};
+
+function initFlashcardState(cards, prefix) {
+  if (!flashcardState[prefix]) {
+    flashcardState[prefix] = { index: 0, flipped: false, results: [] };
+  }
+}
+
+// === RENDER ===
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const root = el('div', {
+    style: `min-height:100vh;background:${COLORS.bg};padding:40px 20px;font-family:'Source Serif 4',serif;`
+  });
+
+  const container = el('div', { style: 'max-width:720px;margin:0 auto;' });
+
+  // Header
+  container.appendChild(el('div', { style: 'text-align:center;margin-bottom:48px;' }, [
+    el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.accent};text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;`,
+      text: "MET 5537 — Study Guide"
+    }),
+    el('h1', {
+      style: `font-family:'Fraunces',serif;font-size:36px;font-weight:700;color:${COLORS.text};line-height:1.2;margin:0;`,
+      html: `Shallow Cumulus<br><span style="color:${COLORS.accent}">Convection</span>`
+    }),
+    el('p', {
+      style: `font-size:15px;color:${COLORS.textDim};margin-top:16px;line-height:1.6;max-width:500px;margin-left:auto;margin-right:auto;`,
+      text: "From trade wind BL structure and mass flux models to the hₗᵥ budget,  the Sc-to-Cu transition, and the climate change implications of shallow cloud feedbacks."
+    }),
+  ]));
+
+  // Concept Cards
+  concepts.forEach(c => {
+    container.appendChild(renderConceptCard(c));
+  });
+
+  // Reference Sections
+  referenceSections.forEach(sec => {
+    container.appendChild(renderReferenceSection(sec));
+  });
+
+  // Footer
+  container.appendChild(el('div', {
+    style: `margin-top:32px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};`,
+    text: "Based on lectures by Prof. Allison Wing — MET 5537"
+  }));
+
+  root.appendChild(container);
+  app.appendChild(root);
+}
+
+function renderConceptCard(c) {
+  const isOpen = openId === c.id;
+  const card = el('div', {
+    class: 'concept-card',
+    style: `background:${COLORS.card};border:1px solid ${isOpen ? c.color : COLORS.border};`
+  });
+
+  // Header
+  const header = el('div', { class: 'concept-header' }, [
+    el('span', { style: 'font-size:28px;', text: c.icon }),
+    el('div', { style: 'flex:1;' }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.text};font-weight:600;`,
+        text: c.title
+      }),
+      el('div', {
+        style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.textDim};margin-top:4px;line-height:1.5;`,
+        text: c.summary
+      }),
+    ]),
+    el('span', {
+      class: 'arrow' + (isOpen ? ' open' : ''),
+      style: `color:${c.color};font-size:20px;`,
+      text: '▾'
+    }),
+  ]);
+
+  header.onclick = () => { openId = (openId === c.id) ? null : c.id; render(); };
+  card.appendChild(header);
+
+  if (isOpen) {
+    const body = el('div', { style: 'padding:0 24px 24px;' });
+    body.appendChild(el('div', { style: `height:1px;background:${COLORS.border};margin-bottom:20px;` }));
+
+    // Key Details label
+    body.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;`,
+      text: 'Key Details'
+    }));
+
+    // Details
+    c.details.forEach(d => {
+      body.appendChild(el('div', {
+        style: `margin-bottom:16px;padding-left:16px;border-left:2px solid ${c.color}33;`
+      }, [
+        el('div', {
+          style: `font-family:'Fraunces',serif;font-size:15px;color:${c.color};font-weight:600;margin-bottom:4px;`,
+          text: d.label
+        }),
+        el('div', {
+          style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.text};line-height:1.7;opacity:0.9;`,
+          text: d.content
+        }),
+      ]));
+    });
+
+    // Flashcards
+    body.appendChild(el('div', {
+      style: `margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;`,
+      text: 'Self-Test Flashcards'
+    }));
+    body.appendChild(renderFlashcardDeck(c.flashcards, c.color, c.id));
+
+    card.appendChild(body);
+  }
+
+  return card;
+}
+
+function renderFlashcardDeck(cards, color, prefix) {
+  initFlashcardState(cards, prefix);
+  const state = flashcardState[prefix];
+  const deck = el('div');
+
+  if (state.index >= cards.length) {
+    // Results
+    const correct = state.results.filter(r => r).length;
+    const pct = Math.round((correct / cards.length) * 100);
+    const results = el('div', {
+      style: `background:${COLORS.success}11;border:1px solid ${COLORS.success}33;border-radius:12px;padding:20px;text-align:center;`
+    }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.success};margin-bottom:8px;`,
+        text: `${pct}% — ${correct}/${cards.length} correct`
+      }),
+      el('div', {
+        style: `font-size:13px;color:${COLORS.textDim};margin-bottom:16px;`,
+        text: pct === 100 ? 'Perfect score!' : pct >= 70 ? 'Good job! Review the ones you missed.' : 'Keep studying — you\'ll get there!'
+      }),
+    ]);
+    const resetBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${color}22;border:1px solid ${color};color:${color};`,
+      text: 'Reset'
+    });
+    resetBtn.onclick = () => { flashcardState[prefix] = { index: 0, flipped: false, results: [] }; render(); };
+    results.appendChild(resetBtn);
+    deck.appendChild(results);
+    return deck;
+  }
+
+  const card = cards[state.index];
+  const fc = el('div', {
+    class: 'flashcard',
+    style: `background:${state.flipped ? color + '11' : COLORS.card.replace('#', '#')};border:1px solid ${state.flipped ? color : COLORS.border};`
+  });
+
+  // Counter
+  fc.appendChild(el('div', {
+    style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:12px;`,
+    text: `${state.index + 1} / ${cards.length}`
+  }));
+
+  if (!state.flipped) {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.q
+    }));
+    fc.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-top:12px;`,
+      text: 'Click to reveal'
+    }));
+    fc.onclick = () => { state.flipped = true; render(); };
+  } else {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.a
+    }));
+    fc.onclick = null;
+  }
+
+  deck.appendChild(fc);
+
+  if (state.flipped) {
+    const btnRow = el('div', { style: 'display:flex;gap:12px;margin-top:12px;justify-content:center;' });
+    const missBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.accent}22;border:1px solid ${COLORS.accent || '#f97316'};color:#fdba74;`,
+      text: 'Missed it'
+    });
+    missBtn.onclick = () => { state.results.push(false); state.index++; state.flipped = false; render(); };
+    const gotBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.success}22;border:1px solid ${COLORS.success};color:#86efac;`,
+      text: 'Got it!'
+    });
+    gotBtn.onclick = () => { state.results.push(true); state.index++; state.flipped = false; render(); };
+    btnRow.appendChild(missBtn);
+    btnRow.appendChild(gotBtn);
+    deck.appendChild(btnRow);
+  }
+
+  return deck;
+}
+
+function renderReferenceSection(sec) {
+  const isQuickRef = sec.title.toLowerCase().includes('quick reference');
+  const wrapper = el('div', {
+    style: `margin-top:${isQuickRef ? 32 : 16}px;background:${isQuickRef ? sec.color + '08' : COLORS.card};border:1px solid ${isQuickRef ? sec.color + '33' : COLORS.border};border-radius:16px;padding:24px;`
+  });
+
+  wrapper.appendChild(el('div', {
+    style: `font-family:'Fraunces',serif;font-size:18px;color:${isQuickRef ? sec.color : COLORS.text};font-weight:600;margin-bottom:16px;`,
+    text: sec.title
+  }));
+
+  const grid = el('div', {
+    style: `display:grid;grid-template-columns:${sec.gridCols};gap:${sec.valueKey === 'val' ? 8 : 12}px;${sec.valueKey === 'val' ? "font-family:'IBM Plex Mono',monospace;font-size:13px;" : ''}`
+  });
+
+  sec.items.forEach(item => {
+    if (sec.valueKey === 'val') {
+      const row = el('div', {
+        style: `display:flex;justify-content:space-between;padding:8px 12px;background:${COLORS.bg}88;border-radius:8px;`
+      }, [
+        el('span', { style: `color:${COLORS.textDim};`, text: item.label }),
+        el('span', { style: `color:${COLORS.text};`, text: item.val }),
+      ]);
+      grid.appendChild(row);
+    } else if (sec.valueKey === 'desc') {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.warm};margin-bottom:4px;font-weight:500;`, text: item.label }),
+        el('div', { style: `font-family:'Source Serif 4',serif;font-size:13px;color:${COLORS.textDim};line-height:1.5;`, text: item.desc }),
+      ]);
+      grid.appendChild(cell);
+    } else {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:4px;`, text: item.label }),
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:14px;color:${COLORS.warm};`, text: item.eq }),
+      ]);
+      grid.appendChild(cell);
+    }
+  });
+
+  wrapper.appendChild(grid);
+  return wrapper;
+}
+
+// === DOM HELPER ===
+function el(tag, opts, children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.style) e.setAttribute('style', opts.style);
+    if (opts.class) e.className = opts.class;
+    if (opts.text) e.textContent = opts.text;
+    if (opts.html) e.innerHTML = opts.html;
+  }
+  if (children) children.forEach(c => { if (c) e.appendChild(c); });
+  return e;
+}
+
+// === INIT ===
+render();
+</script>
+</body>
+</html>

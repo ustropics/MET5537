@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratocumulus Convection</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Source+Serif+4:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Serif 4', serif; }
+  button { font-family: inherit; }
+  .concept-card { transition: border-color 0.3s ease; margin-bottom: 16px; border-radius: 16px; overflow: hidden; }
+  .concept-header { padding: 20px 24px; cursor: pointer; display: flex; align-items: center; gap: 16px; }
+  .concept-header:hover { opacity: 0.9; }
+  .arrow { transition: transform 0.3s ease; display: inline-block; }
+  .arrow.open { transform: rotate(180deg); }
+  .flashcard { border-radius: 12px; padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: transform 0.1s ease; }
+  .flashcard:hover { transform: scale(1.01); }
+  .flash-btn { padding: 8px 24px; border-radius: 8px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+  .flash-btn:hover { opacity: 0.85; }
+  .ref-grid-item { border-radius: 10px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// === DATA ===
+const COLORS = {
+  bg: "#0b0f1a",
+  card: "#111827",
+  accent: "#0ea5e9",
+  warm: "#fbbf24",
+  cool: "#38bdf8",
+  violet: "#a78bfa",
+  emerald: "#34d399",
+  rose: "#fb7185",
+  slate: "#64748b",
+  text: "#e2e8f0",
+  textDim: "#94a3b8",
+  border: "#1e293b",
+  success: "#22c55e",
+  successDim: "#166534",
+};
+
+const concepts = [
+  {
+    id: "sc-basics",
+    title: "What Are Stratocumulus?",
+    icon: "☁️",
+    color: COLORS.cool,
+    summary:
+      "Stratocumulus are low convective clouds that occupy a whole layer of the atmosphere — the most common cloud type on Earth, covering roughly 1/5 of the surface and playing a huge role in Earth's energy balance.",
+    details: [
+      {
+        label: "Physical Characteristics",
+        content:
+          "Stratocumulus are typically only a few hundred meters thick, with cloud base ranging from near the surface up to about 1500 m. They tend to be non-precipitating, though they can produce light drizzle. Despite being thin, liquid water clouds as little as 100 m thick are nearly opaque to longwave radiation.",
+      },
+      {
+        label: "Radiative Importance",
+        content:
+          "Stratocumulus have typical albedos of 30–70%, reflecting significant incoming solar radiation. They produce a net negative cloud radiative forcing — meaning they cool the Earth system overall. Because they cover such vast areas, even small changes in Sc fraction can significantly affect the global energy balance.",
+      },
+      {
+        label: "Cellular Structure",
+        content:
+          "Stratocumulus exhibit mesoscale cellular convection (MCC). Closed MCC has cloudy cell centers with clear edges (honeycomb pattern). Open MCC has clear cell centers ringed by cloud. There are also disorganized cellular patterns and non-cellular (e.g., banded) forms.",
+      },
+      {
+        label: "Analogy to Dry Convection",
+        content:
+          "Stratocumulus are the form of moist convection most analogous to dry convection — like a saturated fluid bounded above and below, driven by buoyancy fluxes. Think of it as Rayleigh-Bénard but with phase changes and radiative driving instead of bottom heating alone.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "How thick are typical stratocumulus clouds, and what is their cloud base height range?",
+        a: "A few hundred meters thick, with cloud base from near the surface to ~1500 m.",
+      },
+      {
+        q: "What is the net radiative effect of stratocumulus on Earth's energy balance, and why?",
+        a: "Net negative cloud radiative forcing (cooling). They have high albedos (30–70%) reflecting solar radiation, while being nearly opaque to longwave. The shortwave cooling effect dominates.",
+      },
+      {
+        q: "What fraction of Earth's surface do stratocumulus cover?",
+        a: "Approximately 1/5 (20%) of Earth's surface.",
+      },
+      {
+        q: "What are the two main types of mesoscale cellular convection in Sc?",
+        a: "Closed MCC (cloudy cell centers, clear edges) and Open MCC (clear cell centers, cloudy rings).",
+      },
+    ],
+  },
+  {
+    id: "sc-climatology",
+    title: "Climatology & Variability",
+    icon: "🌍",
+    color: COLORS.emerald,
+    summary:
+      "Stratocumulus preferentially occur over cold upwelling ocean currents in the eastern subtropical oceans, controlled by lower tropospheric stability (LTS), SST, and large-scale subsidence.",
+    details: [
+      {
+        label: "Preferred Locations",
+        content:
+          "Most abundant over cold upwelling ocean currents in the eastern parts of subtropical oceans (e.g., off California, Peru/Chile, Namibia). These regions have cool SSTs and warm free tropospheres — producing strong lower tropospheric stability.",
+      },
+      {
+        label: "Lower Tropospheric Stability (LTS)",
+        content:
+          "Sc occurrence is strongly correlated with LTS = θ₇₀₀ₕₚₐ − θₛfc. Subsidence both ventilates the boundary layer and warms the free troposphere, increasing LTS. Large LTS keeps the boundary layer shallow and moist, favoring Sc.",
+      },
+      {
+        label: "Temporal Variability",
+        content:
+          "Seasonal: follows the LTS cycle, mostly peaks in spring. Synoptic: associated with ridges and equatorward-moving cold sectors of midlatitude cyclones. Interannual: controlled by SST and free-tropospheric temperature. Diurnal: max coverage in early morning when radiative cooling (and thus convective circulations) is strongest at night.",
+      },
+      {
+        label: "Diurnal Cycle Detail",
+        content:
+          "At night, longwave radiative cooling at cloud top is not partially offset by solar absorption. This maximizes the radiative driving of turbulence, leading to stronger convective circulations and thicker clouds. During the day, solar absorption partially offsets the longwave cooling, weakening the turbulence and thinning the cloud.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is LTS and how does it relate to stratocumulus occurrence?",
+        a: "LTS = θ₇₀₀ₕₚₐ − θₛfc (lower tropospheric stability). Sc occurrence is strongly correlated with large LTS, which keeps the boundary layer shallow and moist.",
+      },
+      {
+        q: "Why do stratocumulus preferentially form over eastern subtropical oceans?",
+        a: "Cold upwelling ocean currents produce cool SSTs while the free troposphere is warm, creating strong lower tropospheric stability and large-scale subsidence — ideal Sc conditions.",
+      },
+      {
+        q: "When is stratocumulus coverage typically at its daily maximum and why?",
+        a: "Early morning. At night, radiative cooling at cloud top is maximized (no solar offset), driving the strongest convective circulations and thickest clouds.",
+      },
+      {
+        q: "How does subsidence promote stratocumulus?",
+        a: "Subsidence ventilates the BL (keeps it shallow) and warms the free troposphere, increasing LTS and maintaining the strong inversion that caps the Sc layer.",
+      },
+    ],
+  },
+  {
+    id: "sc-structure",
+    title: "STBL Structure & Cloud Properties",
+    icon: "📊",
+    color: COLORS.violet,
+    summary:
+      "The stratocumulus-topped boundary layer (STBL) is like a dry convective BL but with a cloudy upper portion. It features well-mixed profiles, a sharp inversion at cloud top, and liquid water increasing linearly above cloud base.",
+    details: [
+      {
+        label: "Canonical STBL Structure",
+        content:
+          "The STBL consists of a well-mixed boundary layer capped by a very sharp inversion (can be 10–20 K over just a few vertical meters). Below the inversion, moist conserved variables (θₗ, qₜ) are approximately uniform. Above the inversion is the warm, dry, subsiding free troposphere.",
+      },
+      {
+        label: "Cloud Base Height",
+        content:
+          "Cloud base is at the lifting condensation level (LCL): z_b ≈ (q*ₛfc − qₜ) / (dq*/dz)|dry adiabat. More subsaturated surface air means a higher cloud base. Rule of thumb: 80% near-surface RH ≈ 500 m cloud base; 60% RH ≈ 1 km cloud base.",
+      },
+      {
+        label: "Liquid Water Profile",
+        content:
+          "Above cloud base, liquid water content increases approximately linearly with height: qₗ(z) ≈ (dq*/dz)|moist adiabat × (z − z_b). Liquid water is largest at cloud top. The liquid water path (LWP) scales as the square of the cloud layer depth.",
+      },
+      {
+        label: "Key Contrast with Dry CBL",
+        content:
+          "In a dry CBL, turbulence is driven from the surface. In the STBL, turbulence is mainly driven from within the cloud layer by radiative cooling at cloud top and enhanced by latent heating. The dry BL below the cloud 'doesn't really know' the Sc is there — it only feels the loss of mass from entrainment.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "How strong can the inversion above stratocumulus cloud top be?",
+        a: "As strong as 10–20 K over just a few vertical meters.",
+      },
+      {
+        q: "How does cloud base height relate to surface relative humidity?",
+        a: "Higher RH → lower cloud base. Rule of thumb: 80% RH ≈ 500 m, 60% RH ≈ 1 km cloud base.",
+      },
+      {
+        q: "How does liquid water content vary with height in Sc?",
+        a: "It increases approximately linearly above cloud base, reaching its maximum at cloud top. LWP scales as (cloud depth)².",
+      },
+      {
+        q: "What is the primary driver of turbulence in the STBL vs. the dry CBL?",
+        a: "STBL: mainly cloud-top radiative cooling (driven from within/top of cloud layer). Dry CBL: surface heating (driven from below).",
+      },
+    ],
+  },
+  {
+    id: "sc-processes",
+    title: "Stratocumulus Processes & Energy Balance",
+    icon: "⚡",
+    color: COLORS.warm,
+    summary:
+      "Stratocumulus are maintained by a competition between radiative cooling, entrainment warming/drying, surface fluxes, and large-scale subsidence. Radiatively-driven turbulence entrains warm, dry air from aloft.",
+    details: [
+      {
+        label: "Radiative Driving",
+        content:
+          "Longwave radiative cooling at cloud top is the primary driver of convective turbulence in the STBL. The cloud top emits longwave radiation to space efficiently, cooling the air there and generating negatively buoyant parcels that sink, driving overturning circulations throughout the BL.",
+      },
+      {
+        label: "Entrainment Effects",
+        content:
+          "Turbulence entrains warm, dry air from above the inversion into the BL. Entrainment warming competes with radiative cooling (heat budget). Entrainment drying offsets the moistening effect of surface evaporation (moisture budget). Entrainment deepening of the BL opposes the thinning effect of large-scale subsidence (mass budget).",
+      },
+      {
+        label: "Surface Fluxes",
+        content:
+          "Surface sensible and latent heat fluxes provide heat and moisture to the BL from below. These are generally smaller than the radiative and entrainment contributions for Sc over cool ocean surfaces, but are still important for maintaining the moisture supply that sustains the cloud.",
+      },
+      {
+        label: "Air Parcel Circuit",
+        content:
+          "Air rises adiabatically from the surface. In the cloud, upward-moving air is warmed by condensational heating and follows a moist adiabat. At the inversion, air is radiatively cooled, then sinks along the moist adiabat until all liquid evaporates. Updrafts are moister, have lower LCL, and are warmer/more buoyant than downdrafts — so buoyancy flux is larger in the cloud layer.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What three budgets are in competition in stratocumulus maintenance?",
+        a: "Heat: radiative cooling vs. entrainment warming vs. surface heat flux. Moisture: surface evaporation vs. entrainment drying. Mass: entrainment deepening vs. large-scale subsidence.",
+      },
+      {
+        q: "Why is buoyancy flux larger in the cloud layer than below it?",
+        a: "Updrafts are warmer (condensational heating) and more buoyant than downdrafts (radiatively cooled, evaporating). This asymmetry produces a larger buoyancy flux within the cloud.",
+      },
+      {
+        q: "Describe the air parcel circuit in the STBL.",
+        a: "Rise adiabatically from surface → condense in cloud, follow moist adiabat upward → radiatively cool at cloud top → sink along moist adiabat, evaporating liquid → repeat.",
+      },
+      {
+        q: "How does entrainment affect the three STBL budgets?",
+        a: "Heat: warms BL (warm air entrained). Moisture: dries BL (dry air entrained). Mass: deepens BL (air added at top, opposing subsidence).",
+      },
+    ],
+  },
+  {
+    id: "mlm",
+    title: "Mixed Layer Model (MLM)",
+    icon: "🧮",
+    color: COLORS.rose,
+    summary:
+      "The mixed layer model treats the STBL as a single well-mixed slab, predicting the evolution of moist conserved variables (θₗ, qₜ) and BL depth (h) based on surface fluxes, entrainment, and subsidence.",
+    details: [
+      {
+        label: "MLM Setup",
+        content:
+          "The MLM is a bulk model (Lilly 1968) that vertically integrates budget equations for heat and moisture, treating the boundary layer like a single slab. It assumes conserved variables are vertically well-mixed (due to turbulence) and the inversion transition layer is infinitesimally thin.",
+      },
+      {
+        label: "Mass Balance",
+        content:
+          "dh/dt = wₑ + w̄(h), where wₑ > 0 is the entrainment velocity (volume of air mixed into BL per unit area per unit time) and w̄(h) < 0 is the large-scale subsidence at BL top. The BL deepens when entrainment exceeds subsidence.",
+      },
+      {
+        label: "Conserved Variable Budgets",
+        content:
+          "For any conserved variable φ (choose θₗ or qₜ): h(dφₘₗ/dt) = −wₑΔφ + F_φ,sfc + Sources. The flux-jump relation gives the turbulent flux at BL top as F_φ(h) = −wₑΔφ, where Δφ is the jump across the inversion. Surface fluxes use a bulk formula: F_φ,sfc = CᴅU(φₛfc − φₘₗ).",
+      },
+      {
+        label: "Conserved Variables for Sc",
+        content:
+          "Choose qₜ (total water mixing ratio) and θₗ (liquid water potential temperature). θₗ = θ exp(−Lqₗ/cₚT) — the temperature a parcel would have if all liquid were evaporated. These are conserved under moist adiabatic processes and well-mixed by turbulence, making them ideal for the MLM framework.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Write the mass balance equation for the MLM and explain each term.",
+        a: "dh/dt = wₑ + w̄(h). wₑ = entrainment velocity (deepens BL), w̄(h) = large-scale subsidence at BL top (shallows BL).",
+      },
+      {
+        q: "What is the flux-jump relation and how is it derived?",
+        a: "F_φ(h) = −wₑΔφ. Derived by integrating the MLM budget over an infinitesimally thin layer around the inversion. The turbulent flux at BL top equals the entrainment velocity times the jump in the variable across the inversion.",
+      },
+      {
+        q: "Why are θₗ and qₜ chosen as the conserved variables for the Sc MLM?",
+        a: "They are conserved under moist adiabatic processes (including condensation/evaporation) and are well-mixed by turbulence throughout the BL, making them ideal for a bulk model.",
+      },
+      {
+        q: "What does θₗ (liquid water potential temperature) physically represent?",
+        a: "The temperature a parcel would have if all its liquid water were evaporated — i.e., the potential temperature of a liquid-free reference state with the same entropy.",
+      },
+    ],
+  },
+  {
+    id: "entrainment",
+    title: "Entrainment & Detrainment",
+    icon: "🌀",
+    color: COLORS.accent,
+    summary:
+      "Entrainment is the inflow of environmental air into the cloudy boundary layer, driven by turbulence and inhibited by the inversion. It is critical for STBL evolution but must be estimated indirectly.",
+    details: [
+      {
+        label: "Entrainment vs. Detrainment",
+        content:
+          "Entrainment is the inflow of mass into a cloudy updraft (or BL), growing turbulence by incorporating quiescent air. Detrainment is the outflow of mass from the cloudy updraft. Detrainment only influences the mass of the updraft, not its composition (T, humidity). Most detrainment occurs at the level of neutral buoyancy.",
+      },
+      {
+        label: "Why Entrainment Matters",
+        content:
+          "The entrainment rate wₑ has a huge impact on cloud-base height and liquid water path evolution. It controls how much warm, dry air is mixed in from above, affecting both the heat and moisture budgets. It must be estimated indirectly — either from budget residuals (dh/dt = wₑ + w̄) or from the flux-jump relation.",
+      },
+      {
+        label: "Dry CBL Entrainment Closure",
+        content:
+          "The key assumption: a specified fraction A of turbulent energy generated in the mixed layer (surface buoyancy flux w'b'ₛfc) is consumed by the negative buoyancy flux at BL top associated with entrainment. This gives: w'b'ₕ = −A·w'b'ₛfc = −wₑΔb. Combined with the convective velocity scale w*, this yields wₑ = A·w*/Ri*, where Ri* is the convective Richardson number.",
+      },
+      {
+        label: "Problems with Dry CBL Closure for Sc",
+        content:
+          "The dry CBL parameterization underestimates entrainment in Sc because: (1) the STBL is not dry — phase changes matter, and (2) it's not purely surface-driven — radiative cooling at cloud top is the primary turbulence source. The Nicholls-Turton (NT) modification addresses both issues.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is the difference between entrainment and detrainment?",
+        a: "Entrainment: inflow of environmental air into the BL/updraft, growing it. Detrainment: outflow of air from the updraft, mainly at the level of neutral buoyancy. Detrainment affects mass but not composition.",
+      },
+      {
+        q: "Write the dry CBL entrainment closure and explain what A represents.",
+        a: "w'b'ₕ = −A·w'b'ₛfc. A is the efficiency factor — the fraction of surface-generated TKE consumed by the negative buoyancy flux at BL top due to entrainment. Typically A ≈ 0.2.",
+      },
+      {
+        q: "Why does the dry CBL entrainment closure underestimate wₑ for stratocumulus?",
+        a: "Two reasons: (1) Phase changes in the cloud layer provide additional turbulence not accounted for, and (2) turbulence is primarily driven by cloud-top radiative cooling, not surface buoyancy flux alone.",
+      },
+      {
+        q: "How can entrainment velocity be estimated indirectly?",
+        a: "From the mass budget residual: wₑ = dh/dt − w̄(h), or from the flux-jump relation: F_φ(h) = −wₑΔφ.",
+      },
+    ],
+  },
+  {
+    id: "nt-closure",
+    title: "Nicholls-Turton (NT) Entrainment Closure",
+    icon: "🔧",
+    color: COLORS.violet,
+    summary:
+      "The NT closure modifies the dry CBL entrainment parameterization to account for evaporative enhancement of entrainment in stratocumulus, using Δm to measure buoyancy reduction from mixing cloud and inversion air.",
+    details: [
+      {
+        label: "Modified Efficiency Factor",
+        content:
+          "A_NT = A[1 + a₂(1 − Δm/Δθ_ρ)], where Δm = 2∫₀¹(θ_ρ(χ) − θ̄_ρ)dχ. This describes how much evaporation of cloud liquid water reduces the buoyancy of mixtures of mixed-layer and above-inversion air. The parameter χ is the mixing fraction.",
+      },
+      {
+        label: "Limiting Cases",
+        content:
+          "If there is no liquid water, Δm = Δθ_ρ and the dry CBL parameterization is recovered (A_NT = A). If cloudy air is mixed with warm, dry inversion air, evaporative cooling enhances A_NT because Δm < Δθ_ρ — the resulting mixtures are less buoyant and thus easier to entrain.",
+      },
+      {
+        label: "Sensitivity to Inversion Dryness",
+        content:
+          "Δm decreases for drier inversion layers — meaning evaporative enhancement of entrainment is stronger when the free troposphere is drier. This makes physical sense: drier air above the cloud causes more evaporation when entrained, generating more negative buoyancy.",
+      },
+      {
+        label: "Additional Features",
+        content:
+          "Radiative cooling can be included in w* (the convective velocity scale). The NT closure can predict entrainment rates that would cause the BL to decouple, at which point the MLM is no longer valid. Alternative approaches include specifying entrainment by requiring a fixed ratio of F_B to its non-entraining value.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Write the NT entrainment efficiency factor and explain what Δm represents.",
+        a: "A_NT = A[1 + a₂(1 − Δm/Δθ_ρ)]. Δm measures the buoyancy reduction due to evaporative cooling when mixed-layer air mixes with above-inversion air. Δm = 2∫₀¹(θ_ρ(χ) − θ̄_ρ)dχ.",
+      },
+      {
+        q: "Under what condition does the NT closure reduce to the dry CBL closure?",
+        a: "When there is no liquid water: Δm = Δθ_ρ, so the correction term vanishes and A_NT = A.",
+      },
+      {
+        q: "Why does a drier free troposphere enhance entrainment in the NT framework?",
+        a: "Drier air above means Δm decreases (more evaporative cooling of mixtures), making A_NT larger. Physically, drier entrained air causes more cloud evaporation, generating more negative buoyancy that enhances mixing.",
+      },
+      {
+        q: "What does it mean when NT closure predicts BL decoupling?",
+        a: "Entrainment is so strong that the BL can no longer remain well-mixed — the turbulence cannot keep up. The MLM assumption of uniform vertical profiles breaks down, and a more complex model is needed.",
+      },
+    ],
+  },
+  {
+    id: "equilibrium",
+    title: "Equilibrium States & Sc Break-Up",
+    icon: "⚖️",
+    color: COLORS.warm,
+    summary:
+      "Steady-state MLM solutions reveal how Sc respond to large-scale forcing. Weak subsidence produces deep BLs with thick clouds. Increasing SST deepens the BL and can eventually lead to Sc break-up.",
+    details: [
+      {
+        label: "Steady-State Solutions",
+        content:
+          "Setting time derivatives to zero in the MLM yields equilibrium relationships between SST, subsidence (divergence), and BL properties. These reveal how Sc respond to large-scale forcing.",
+      },
+      {
+        label: "Subsidence & SST Effects",
+        content:
+          "Weak subsidence → deep BL, thick cloud. Increasing SST → deeper BL (because the same free-tropospheric temperature means higher SST = weaker inversion stability). Both effects are captured by a simple entrainment parameterization: wₑ = η(ΔF_rad/Δθₗ).",
+      },
+      {
+        label: "Simplified Equilibrium",
+        content:
+          "θₗ,ₘₗ = θₛfc + (1−η)ΔF_rad/(CᴅU). For η = 1, entrainment warming perfectly balances radiative cooling and θₗ,ₘₗ = θₛfc. More entrainment of warm air → surface heat flux must decrease (can become negative for large SST, small subsidence). More entrainment of dry air at cloud top → need larger surface evaporation to compensate.",
+      },
+      {
+        label: "Sc Break-Up",
+        content:
+          "As the STBL deepens (e.g., as air advects over warmer water equatorward), the BL eventually decouples — turbulence from cloud top can no longer mix the entire layer. This leads to cumulus rising into stratocumulus (cumulus-under-stratocumulus), and eventually to stratocumulus break-up and a transition to trade cumulus.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "How does increasing SST affect the STBL, given a fixed free-tropospheric temperature?",
+        a: "Higher SST weakens the inversion stability, leading to a deeper BL. Eventually this can lead to decoupling and Sc break-up.",
+      },
+      {
+        q: "What happens when η = 1 in the simplified equilibrium?",
+        a: "Entrainment warming exactly balances radiative cooling, so θₗ,ₘₗ = θₛfc (the mixed layer temperature equals the surface temperature).",
+      },
+      {
+        q: "What is the simple entrainment parameterization used for equilibrium solutions?",
+        a: "wₑ = η(ΔF_rad/Δθₗ), where η is an efficiency parameter, ΔF_rad is the net radiative flux change across the cloud, and Δθₗ is the inversion jump in θₗ.",
+      },
+      {
+        q: "Describe the sequence of events during stratocumulus break-up.",
+        a: "STBL deepens → decouples (turbulence can't mix full depth) → cumulus forms below Sc (Cu-under-Sc) → Sc thins and breaks up → transition to trade wind cumulus.",
+      },
+    ],
+  },
+];
+
+const referenceSections = [];
+
+// === STATE ===
+let openId = null;
+const flashcardState = {};
+
+function initFlashcardState(cards, prefix) {
+  if (!flashcardState[prefix]) {
+    flashcardState[prefix] = { index: 0, flipped: false, results: [] };
+  }
+}
+
+// === RENDER ===
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const root = el('div', {
+    style: `min-height:100vh;background:${COLORS.bg};padding:40px 20px;font-family:'Source Serif 4',serif;`
+  });
+
+  const container = el('div', { style: 'max-width:720px;margin:0 auto;' });
+
+  // Header
+  container.appendChild(el('div', { style: 'text-align:center;margin-bottom:48px;' }, [
+    el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.accent};text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;`,
+      text: "MET 5537 — Study Guide"
+    }),
+    el('h1', {
+      style: `font-family:'Fraunces',serif;font-size:36px;font-weight:700;color:${COLORS.text};line-height:1.2;margin:0;`,
+      html: `Stratocumulus<br><span style="color:${COLORS.accent}">Convection</span>`
+    }),
+    el('p', {
+      style: `font-size:15px;color:${COLORS.textDim};margin-top:16px;line-height:1.6;max-width:500px;margin-left:auto;margin-right:auto;`,
+      text: "From Sc climatology and structure to the mixed layer model, entrainment closures, equilibrium states, and cloud break-up."
+    }),
+  ]));
+
+  // Concept Cards
+  concepts.forEach(c => {
+    container.appendChild(renderConceptCard(c));
+  });
+
+  // Reference Sections
+  referenceSections.forEach(sec => {
+    container.appendChild(renderReferenceSection(sec));
+  });
+
+  // Footer
+  container.appendChild(el('div', {
+    style: `margin-top:32px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};`,
+    text: "Based on lectures by Prof. Allison Wing — MET 5537"
+  }));
+
+  root.appendChild(container);
+  app.appendChild(root);
+}
+
+function renderConceptCard(c) {
+  const isOpen = openId === c.id;
+  const card = el('div', {
+    class: 'concept-card',
+    style: `background:${COLORS.card};border:1px solid ${isOpen ? c.color : COLORS.border};`
+  });
+
+  // Header
+  const header = el('div', { class: 'concept-header' }, [
+    el('span', { style: 'font-size:28px;', text: c.icon }),
+    el('div', { style: 'flex:1;' }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.text};font-weight:600;`,
+        text: c.title
+      }),
+      el('div', {
+        style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.textDim};margin-top:4px;line-height:1.5;`,
+        text: c.summary
+      }),
+    ]),
+    el('span', {
+      class: 'arrow' + (isOpen ? ' open' : ''),
+      style: `color:${c.color};font-size:20px;`,
+      text: '▾'
+    }),
+  ]);
+
+  header.onclick = () => { openId = (openId === c.id) ? null : c.id; render(); };
+  card.appendChild(header);
+
+  if (isOpen) {
+    const body = el('div', { style: 'padding:0 24px 24px;' });
+    body.appendChild(el('div', { style: `height:1px;background:${COLORS.border};margin-bottom:20px;` }));
+
+    // Key Details label
+    body.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;`,
+      text: 'Key Details'
+    }));
+
+    // Details
+    c.details.forEach(d => {
+      body.appendChild(el('div', {
+        style: `margin-bottom:16px;padding-left:16px;border-left:2px solid ${c.color}33;`
+      }, [
+        el('div', {
+          style: `font-family:'Fraunces',serif;font-size:15px;color:${c.color};font-weight:600;margin-bottom:4px;`,
+          text: d.label
+        }),
+        el('div', {
+          style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.text};line-height:1.7;opacity:0.9;`,
+          text: d.content
+        }),
+      ]));
+    });
+
+    // Flashcards
+    body.appendChild(el('div', {
+      style: `margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;`,
+      text: 'Self-Test Flashcards'
+    }));
+    body.appendChild(renderFlashcardDeck(c.flashcards, c.color, c.id));
+
+    card.appendChild(body);
+  }
+
+  return card;
+}
+
+function renderFlashcardDeck(cards, color, prefix) {
+  initFlashcardState(cards, prefix);
+  const state = flashcardState[prefix];
+  const deck = el('div');
+
+  if (state.index >= cards.length) {
+    // Results
+    const correct = state.results.filter(r => r).length;
+    const pct = Math.round((correct / cards.length) * 100);
+    const results = el('div', {
+      style: `background:${COLORS.success}11;border:1px solid ${COLORS.success}33;border-radius:12px;padding:20px;text-align:center;`
+    }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.success};margin-bottom:8px;`,
+        text: `${pct}% — ${correct}/${cards.length} correct`
+      }),
+      el('div', {
+        style: `font-size:13px;color:${COLORS.textDim};margin-bottom:16px;`,
+        text: pct === 100 ? 'Perfect score!' : pct >= 70 ? 'Good job! Review the ones you missed.' : 'Keep studying — you\'ll get there!'
+      }),
+    ]);
+    const resetBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${color}22;border:1px solid ${color};color:${color};`,
+      text: 'Reset'
+    });
+    resetBtn.onclick = () => { flashcardState[prefix] = { index: 0, flipped: false, results: [] }; render(); };
+    results.appendChild(resetBtn);
+    deck.appendChild(results);
+    return deck;
+  }
+
+  const card = cards[state.index];
+  const fc = el('div', {
+    class: 'flashcard',
+    style: `background:${state.flipped ? color + '11' : COLORS.card.replace('#', '#')};border:1px solid ${state.flipped ? color : COLORS.border};`
+  });
+
+  // Counter
+  fc.appendChild(el('div', {
+    style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:12px;`,
+    text: `${state.index + 1} / ${cards.length}`
+  }));
+
+  if (!state.flipped) {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.q
+    }));
+    fc.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-top:12px;`,
+      text: 'Click to reveal'
+    }));
+    fc.onclick = () => { state.flipped = true; render(); };
+  } else {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.a
+    }));
+    fc.onclick = null;
+  }
+
+  deck.appendChild(fc);
+
+  if (state.flipped) {
+    const btnRow = el('div', { style: 'display:flex;gap:12px;margin-top:12px;justify-content:center;' });
+    const missBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.accent}22;border:1px solid ${COLORS.accent || '#f97316'};color:#fdba74;`,
+      text: 'Missed it'
+    });
+    missBtn.onclick = () => { state.results.push(false); state.index++; state.flipped = false; render(); };
+    const gotBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.success}22;border:1px solid ${COLORS.success};color:#86efac;`,
+      text: 'Got it!'
+    });
+    gotBtn.onclick = () => { state.results.push(true); state.index++; state.flipped = false; render(); };
+    btnRow.appendChild(missBtn);
+    btnRow.appendChild(gotBtn);
+    deck.appendChild(btnRow);
+  }
+
+  return deck;
+}
+
+function renderReferenceSection(sec) {
+  const isQuickRef = sec.title.toLowerCase().includes('quick reference');
+  const wrapper = el('div', {
+    style: `margin-top:${isQuickRef ? 32 : 16}px;background:${isQuickRef ? sec.color + '08' : COLORS.card};border:1px solid ${isQuickRef ? sec.color + '33' : COLORS.border};border-radius:16px;padding:24px;`
+  });
+
+  wrapper.appendChild(el('div', {
+    style: `font-family:'Fraunces',serif;font-size:18px;color:${isQuickRef ? sec.color : COLORS.text};font-weight:600;margin-bottom:16px;`,
+    text: sec.title
+  }));
+
+  const grid = el('div', {
+    style: `display:grid;grid-template-columns:${sec.gridCols};gap:${sec.valueKey === 'val' ? 8 : 12}px;${sec.valueKey === 'val' ? "font-family:'IBM Plex Mono',monospace;font-size:13px;" : ''}`
+  });
+
+  sec.items.forEach(item => {
+    if (sec.valueKey === 'val') {
+      const row = el('div', {
+        style: `display:flex;justify-content:space-between;padding:8px 12px;background:${COLORS.bg}88;border-radius:8px;`
+      }, [
+        el('span', { style: `color:${COLORS.textDim};`, text: item.label }),
+        el('span', { style: `color:${COLORS.text};`, text: item.val }),
+      ]);
+      grid.appendChild(row);
+    } else if (sec.valueKey === 'desc') {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.warm};margin-bottom:4px;font-weight:500;`, text: item.label }),
+        el('div', { style: `font-family:'Source Serif 4',serif;font-size:13px;color:${COLORS.textDim};line-height:1.5;`, text: item.desc }),
+      ]);
+      grid.appendChild(cell);
+    } else {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:4px;`, text: item.label }),
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:14px;color:${COLORS.warm};`, text: item.eq }),
+      ]);
+      grid.appendChild(cell);
+    }
+  });
+
+  wrapper.appendChild(grid);
+  return wrapper;
+}
+
+// === DOM HELPER ===
+function el(tag, opts, children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.style) e.setAttribute('style', opts.style);
+    if (opts.class) e.className = opts.class;
+    if (opts.text) e.textContent = opts.text;
+    if (opts.html) e.innerHTML = opts.html;
+  }
+  if (children) children.forEach(c => { if (c) e.appendChild(c); });
+  return e;
+}
+
+// === INIT ===
+render();
+</script>
+</body>
+</html>

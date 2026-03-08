@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preliminaries & Dry Convection</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Source+Serif+4:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Serif 4', serif; }
+  button { font-family: inherit; }
+  .concept-card { transition: border-color 0.3s ease; margin-bottom: 16px; border-radius: 16px; overflow: hidden; }
+  .concept-header { padding: 20px 24px; cursor: pointer; display: flex; align-items: center; gap: 16px; }
+  .concept-header:hover { opacity: 0.9; }
+  .arrow { transition: transform 0.3s ease; display: inline-block; }
+  .arrow.open { transform: rotate(180deg); }
+  .flashcard { border-radius: 12px; padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: transform 0.1s ease; }
+  .flashcard:hover { transform: scale(1.01); }
+  .flash-btn { padding: 8px 24px; border-radius: 8px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+  .flash-btn:hover { opacity: 0.85; }
+  .ref-grid-item { border-radius: 10px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// === DATA ===
+const COLORS = {
+  bg: "#0b0f1a",
+  card: "#111827",
+  cardHover: "#1a2235",
+  accent: "#e85d04",
+  warm: "#fbbf24",
+  cool: "#38bdf8",
+  violet: "#a78bfa",
+  emerald: "#34d399",
+  rose: "#fb7185",
+  text: "#e2e8f0",
+  textDim: "#94a3b8",
+  border: "#1e293b",
+  success: "#22c55e",
+  successDim: "#166534",
+};
+
+const concepts = [
+  {
+    id: "radiative-eq",
+    title: "Radiative Equilibrium & Why Convection Exists",
+    icon: "☀️",
+    color: COLORS.warm,
+    summary:
+      "Pure radiative equilibrium produces a surface that is far too hot and a troposphere that is unstable — convection is the missing ingredient that transports enthalpy vertically.",
+    details: [
+      {
+        label: "Blackbody Emission Temperature",
+        content:
+          "Earth balances incoming solar radiation via the Stefan-Boltzmann law: σTe⁴ = S₀(1−αp)/4. This gives Te ≈ 255 K (−18°C), which is the temperature Earth's surface would have if the atmosphere were transparent to longwave radiation.",
+      },
+      {
+        label: "Two-Layer Greenhouse Model",
+        content:
+          "With two opaque atmospheric layers, energy balance at each layer gives: T₂ = Te = 255 K, T₁ = 2¹ᐟ⁴ Te = 303 K, and Ts = 3¹ᐟ⁴ Te = 336 K. The surface is much warmer than Te due to the greenhouse effect — the surface receives more radiation from the atmosphere than from the sun.",
+      },
+      {
+        label: "Surface Air Not in Equilibrium",
+        content:
+          "Inserting a thin air layer at the surface gives TA = (5/2)¹ᐟ⁴ Te ≈ 321 K, while Ts = 336 K. Since TA < Ts, the surface air is not in thermal equilibrium with the surface. This implies there must be a non-radiative (convective) heat flux away from the surface.",
+      },
+      {
+        label: "Radiative Equilibrium Is Unstable",
+        content:
+          "A full radiative transfer calculation confirms the problem: the surface is too hot, lower atmosphere too cold, and the lapse rate is much too large. The entire troposphere in radiative equilibrium is unstable to convection — convection is the missing ingredient.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is Earth's blackbody emission temperature Te, and what does it represent?",
+        a: "Te ≈ 255 K (−18°C). It's the temperature Earth's surface would have if the atmosphere were transparent to longwave radiation, derived from σTe⁴ = S₀(1−αp)/4.",
+      },
+      {
+        q: "In the two-layer greenhouse model, what are T₂, T₁, and Ts?",
+        a: "T₂ = Te = 255 K, T₁ = 2¹ᐟ⁴ Te = 303 K, Ts = 3¹ᐟ⁴ Te = 336 K. Each deeper layer is warmer due to the greenhouse effect.",
+      },
+      {
+        q: "Why must convection exist based on the radiative equilibrium analysis?",
+        a: "The surface air temperature TA < Ts (surface temperature), so air near the surface is not in thermal equilibrium. This requires a non-radiative (convective) heat transport away from the surface. The entire tropospheric radiative equilibrium profile is unstable to convection.",
+      },
+    ],
+  },
+  {
+    id: "dry-convection",
+    title: "Dry Convection & Buoyancy",
+    icon: "🫧",
+    color: COLORS.cool,
+    summary:
+      "Dry convection is convection without phase change. Whether a displaced parcel accelerates or returns depends on buoyancy — the density difference between parcel and environment.",
+    details: [
+      {
+        label: "What Is Dry Convection?",
+        content:
+          "Dry convection = convection without phase change. It doesn't require the fluid to be air — a pot of water heated from below undergoes dry convection (until boiling begins). The key questions are about buoyancy and stability.",
+      },
+      {
+        label: "Buoyancy Definition",
+        content:
+          "Buoyancy acceleration: b = −g(ρ − ρ₀)/ρ. The upward buoyant force per unit volume equals the weight of displaced fluid minus the weight of the parcel. If the parcel is less dense than environment, it's positively buoyant and accelerates upward.",
+      },
+      {
+        label: "Derivation of Buoyancy",
+        content:
+          "Start from the vertical momentum equation: dw/dt = −(1/ρ)(∂p/∂z) − g. For a parcel in a hydrostatic background (∂p₀/∂z = −ρ₀g) with pressure adjusting to match environment (p = p₀): dw/dt = −g(ρ − ρ₀)/ρ = b.",
+      },
+      {
+        label: "Buoyancy in Terms of θ",
+        content:
+          "For small fractional density variations (Boussinesq-like), buoyancy can be written as: b = g(θ − θ₀)/θ₀, where θ is the parcel's potential temperature and θ₀ is the environment's. This form directly connects buoyancy to the thermodynamic state.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is dry convection?",
+        a: "Convection without phase change. It applies to any fluid (not just air) — e.g., a pot of water heated from below is dry convection until boiling starts.",
+      },
+      {
+        q: "Write the buoyancy acceleration in terms of density.",
+        a: "b = −g(ρ − ρ₀)/ρ, where ρ is the parcel density and ρ₀ is the environmental density.",
+      },
+      {
+        q: "How is buoyancy expressed in terms of potential temperature?",
+        a: "b = g(θ − θ₀)/θ₀, where θ is the parcel potential temperature and θ₀ is the environment's.",
+      },
+      {
+        q: "What key assumption is made when deriving parcel buoyancy from the momentum equation?",
+        a: "The parcel pressure adjusts instantaneously to match the environmental pressure (p = p₀), and the background state is in hydrostatic balance.",
+      },
+    ],
+  },
+  {
+    id: "stability",
+    title: "Stability & the Brunt-Väisälä Frequency",
+    icon: "📐",
+    color: COLORS.violet,
+    summary:
+      "Stability depends on the sign of N² (Brunt-Väisälä frequency squared), which is determined by whether potential temperature increases or decreases with height in the environment.",
+    details: [
+      {
+        label: "Adiabatic Parcel Assumption",
+        content:
+          "A rising parcel conserves θ and entropy s. As it rises, it expands (density decreases), does work on its environment, loses internal energy, and cools. From the 1st law (dq = 0): the dry adiabatic lapse rate is Γd = −(dT/dz)_s = g/cp ≈ 9.8 K/km.",
+      },
+      {
+        label: "Potential Temperature",
+        content:
+          "θ = T(1000 hPa / p)^(Rd/cp) — the temperature a parcel would have if brought adiabatically to 1000 hPa. An adiabatically rising parcel conserves θ. Potential temperature is the key variable for assessing dry stability.",
+      },
+      {
+        label: "Brunt-Väisälä Frequency",
+        content:
+          "For a small displacement δz: d²(δz)/dt² + N²δz = 0, where N² = (g/θ₀)(dθ₀/dz) = (g/T₀)(Γd + dT₀/dz). The sign of N² determines stability: N² > 0 gives oscillatory (stable, gravity wave) solutions; N² < 0 gives exponentially growing (unstable) solutions.",
+      },
+      {
+        label: "Stability Criteria",
+        content:
+          "Stable (N² > 0): dθ/dz > 0, entropy increases with height, environment cools slower than Γd. Unstable (N² < 0): dθ/dz < 0, entropy decreases with height, environment cools faster than Γd. Neutral: N² = 0, dθ/dz = 0, lapse rate equals Γd.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is the dry adiabatic lapse rate and how is it derived?",
+        a: "Γd = g/cp ≈ 9.8 K/km. Derived from the 1st law of thermodynamics with dq = 0 (adiabatic process).",
+      },
+      {
+        q: "Write the equation of motion for a small vertical parcel displacement and define N².",
+        a: "d²(δz)/dt² + N²δz = 0, where N² = (g/θ₀)(dθ₀/dz). N is the Brunt-Väisälä frequency.",
+      },
+      {
+        q: "What are the solutions when N² > 0 vs N² < 0?",
+        a: "N² > 0: oscillatory/wavelike solutions (stable — gravity waves). N² < 0: exponentially growing solutions (unstable — convection).",
+      },
+      {
+        q: "What three equivalent ways can you assess dry stability?",
+        a: "1) Sign of N² (positive = stable), 2) Sign of dθ/dz (positive = stable), 3) Whether the environmental lapse rate is less than or greater than Γd.",
+      },
+      {
+        q: "What does potential temperature θ represent physically?",
+        a: "The temperature a parcel would have if brought adiabatically to 1000 hPa. It's conserved for adiabatic processes and is the key variable for dry stability.",
+      },
+    ],
+  },
+  {
+    id: "rce",
+    title: "Radiative-Convective Equilibrium (Dry)",
+    icon: "⚖️",
+    color: COLORS.emerald,
+    summary:
+      "Convection acts much faster than radiation (~hours vs ~40 days) and drives the atmosphere toward convective neutrality. But dry RCE still doesn't match observations — moist convection is needed.",
+    details: [
+      {
+        label: "Timescale Competition",
+        content:
+          "Radiative fluxes drive the atmosphere toward radiative equilibrium (which is convectively unstable) on a timescale of ~40 days. Convection drives toward convective neutrality (adiabatic lapse rate) on a timescale of a few hours. Convection \"wins\" this competition.",
+      },
+      {
+        label: "Convective Heat Fluxes",
+        content:
+          "In the RCE framework, a convective heat flux Fc carries heat from the lower to upper atmospheric layer, and a turbulent surface flux Fs carries heat from the surface to the lower layer. Convection fixes the temperature difference between layers to a state of convective neutrality.",
+      },
+      {
+        label: "Dry RCE vs. Reality",
+        content:
+          "Dry RCE gives a lapse rate of ~10 K/km (the dry adiabatic lapse rate). The observed tropospheric lapse rate is ~6.5 K/km. The dry RCE surface is still too hot and the lapse rate still too large — we need to consider moist convection to get a realistic temperature profile.",
+      },
+      {
+        label: "Big Picture: Why Convection Matters for Climate",
+        content:
+          "Convection dominates vertical heat transport in the climate system and sets the lapse rate when it can. Convection is a mixing process, not a heat source. It sets the critical lapse rate of the atmosphere, which doesn't get much more unstable than this threshold.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What are the timescales for radiative adjustment vs. convective adjustment?",
+        a: "Radiative: ~40 days. Convective: a few hours. Convection acts much faster and 'wins.'",
+      },
+      {
+        q: "What lapse rate does dry RCE produce, and how does it compare to reality?",
+        a: "Dry RCE: ~10 K/km (dry adiabatic). Reality: ~6.5 K/km. The discrepancy means moist convection must be considered.",
+      },
+      {
+        q: "Is convection a heat source or a mixing process?",
+        a: "Convection is a mixing process, not a heat source. It redistributes enthalpy vertically.",
+      },
+      {
+        q: "Why is understanding convection important for climate?",
+        a: "Convection dominates vertical heat transport, sets the tropospheric lapse rate, and its parameterization is critical for climate models. The atmosphere doesn't get much more unstable than the convective threshold.",
+      },
+    ],
+  },
+  {
+    id: "key-equations",
+    title: "Governing Equations & Boussinesq Framework",
+    icon: "📝",
+    color: COLORS.rose,
+    summary:
+      "The Boussinesq equations — neglecting density variations except in the buoyancy term — form the foundation for analyzing convective instability.",
+    details: [
+      {
+        label: "Boussinesq Approximation",
+        content:
+          "Neglect density variations except when coupled with gravity (i.e., in the buoyancy term). Assume |ρ'|/ρ₀ << 1. Define p = p₀(z) + p', assume background hydrostatic balance (∂p₀/∂z = −ρ₀g), and use the continuity equation ∂u/∂x + ∂w/∂z = 0.",
+      },
+      {
+        label: "Linearized Boussinesq Equations",
+        content:
+          "Linearize about a resting background state (u₀ = 0, w₀ = 0, T = T₀(z) + T'). This yields 4 equations (x-momentum, z-momentum, continuity, thermodynamic) with 4 unknowns (u', w', p', T') plus dimensional external parameters (ν, β, κ, g, ρ₀, H, ΔT).",
+      },
+      {
+        label: "Reducing to One Equation",
+        content:
+          "To perform linear stability analysis: (1) take curl of momentum equations to eliminate p', (2) take ∂/∂x and substitute from continuity, (3) take [∂/∂t − κ∇²] of both sides and substitute from thermodynamic equation. This yields a single 6th-order PDE for w alone.",
+      },
+      {
+        label: "Connection to R-B Analysis",
+        content:
+          "Non-dimensionalizing this single equation introduces Ra = gβH³ΔT/(νκ) and Pr = ν/κ. Assuming wavelike solutions w ~ sin(nπz)·exp(ikx + σt) converts the PDE to an algebraic equation relating the growth rate σ to wavenumber k, Ra, and Pr.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is the key assumption of the Boussinesq approximation?",
+        a: "Neglect density variations everywhere except when coupled with gravity (the buoyancy term). Fractional density perturbations are assumed small: |ρ'|/ρ₀ << 1.",
+      },
+      {
+        q: "How many unknowns do the linearized 2D Boussinesq equations have?",
+        a: "Four: u', w', p', and T' (perturbation velocity components, pressure, and temperature).",
+      },
+      {
+        q: "What order PDE results from reducing the Boussinesq system to one equation for w?",
+        a: "A 6th-order PDE. The process involves taking the curl (to eliminate p'), substituting from continuity, and combining with the thermodynamic equation.",
+      },
+    ],
+  },
+];
+
+const referenceSections = [];
+
+// === STATE ===
+let openId = null;
+const flashcardState = {};
+
+function initFlashcardState(cards, prefix) {
+  if (!flashcardState[prefix]) {
+    flashcardState[prefix] = { index: 0, flipped: false, results: [] };
+  }
+}
+
+// === RENDER ===
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const root = el('div', {
+    style: `min-height:100vh;background:${COLORS.bg};padding:40px 20px;font-family:'Source Serif 4',serif;`
+  });
+
+  const container = el('div', { style: 'max-width:720px;margin:0 auto;' });
+
+  // Header
+  container.appendChild(el('div', { style: 'text-align:center;margin-bottom:48px;' }, [
+    el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.accent};text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;`,
+      text: "MET 5537 — Study Guide"
+    }),
+    el('h1', {
+      style: `font-family:'Fraunces',serif;font-size:36px;font-weight:700;color:${COLORS.text};line-height:1.2;margin:0;`,
+      html: `Preliminaries &<br><span style="color:${COLORS.accent}">Dry Convection</span>`
+    }),
+    el('p', {
+      style: `font-size:15px;color:${COLORS.textDim};margin-top:16px;line-height:1.6;max-width:500px;margin-left:auto;margin-right:auto;`,
+      text: "From radiative equilibrium to the necessity of convection — covering buoyancy, stability, and dry radiative-convective equilibrium."
+    }),
+  ]));
+
+  // Concept Cards
+  concepts.forEach(c => {
+    container.appendChild(renderConceptCard(c));
+  });
+
+  // Reference Sections
+  referenceSections.forEach(sec => {
+    container.appendChild(renderReferenceSection(sec));
+  });
+
+  // Footer
+  container.appendChild(el('div', {
+    style: `margin-top:32px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};`,
+    text: "Based on lectures by Prof. Allison Wing — MET 5537"
+  }));
+
+  root.appendChild(container);
+  app.appendChild(root);
+}
+
+function renderConceptCard(c) {
+  const isOpen = openId === c.id;
+  const card = el('div', {
+    class: 'concept-card',
+    style: `background:${COLORS.card};border:1px solid ${isOpen ? c.color : COLORS.border};`
+  });
+
+  // Header
+  const header = el('div', { class: 'concept-header' }, [
+    el('span', { style: 'font-size:28px;', text: c.icon }),
+    el('div', { style: 'flex:1;' }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.text};font-weight:600;`,
+        text: c.title
+      }),
+      el('div', {
+        style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.textDim};margin-top:4px;line-height:1.5;`,
+        text: c.summary
+      }),
+    ]),
+    el('span', {
+      class: 'arrow' + (isOpen ? ' open' : ''),
+      style: `color:${c.color};font-size:20px;`,
+      text: '▾'
+    }),
+  ]);
+
+  header.onclick = () => { openId = (openId === c.id) ? null : c.id; render(); };
+  card.appendChild(header);
+
+  if (isOpen) {
+    const body = el('div', { style: 'padding:0 24px 24px;' });
+    body.appendChild(el('div', { style: `height:1px;background:${COLORS.border};margin-bottom:20px;` }));
+
+    // Key Details label
+    body.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;`,
+      text: 'Key Details'
+    }));
+
+    // Details
+    c.details.forEach(d => {
+      body.appendChild(el('div', {
+        style: `margin-bottom:16px;padding-left:16px;border-left:2px solid ${c.color}33;`
+      }, [
+        el('div', {
+          style: `font-family:'Fraunces',serif;font-size:15px;color:${c.color};font-weight:600;margin-bottom:4px;`,
+          text: d.label
+        }),
+        el('div', {
+          style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.text};line-height:1.7;opacity:0.9;`,
+          text: d.content
+        }),
+      ]));
+    });
+
+    // Flashcards
+    body.appendChild(el('div', {
+      style: `margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;`,
+      text: 'Self-Test Flashcards'
+    }));
+    body.appendChild(renderFlashcardDeck(c.flashcards, c.color, c.id));
+
+    card.appendChild(body);
+  }
+
+  return card;
+}
+
+function renderFlashcardDeck(cards, color, prefix) {
+  initFlashcardState(cards, prefix);
+  const state = flashcardState[prefix];
+  const deck = el('div');
+
+  if (state.index >= cards.length) {
+    // Results
+    const correct = state.results.filter(r => r).length;
+    const pct = Math.round((correct / cards.length) * 100);
+    const results = el('div', {
+      style: `background:${COLORS.success}11;border:1px solid ${COLORS.success}33;border-radius:12px;padding:20px;text-align:center;`
+    }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.success};margin-bottom:8px;`,
+        text: `${pct}% — ${correct}/${cards.length} correct`
+      }),
+      el('div', {
+        style: `font-size:13px;color:${COLORS.textDim};margin-bottom:16px;`,
+        text: pct === 100 ? 'Perfect score!' : pct >= 70 ? 'Good job! Review the ones you missed.' : 'Keep studying — you\'ll get there!'
+      }),
+    ]);
+    const resetBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${color}22;border:1px solid ${color};color:${color};`,
+      text: 'Reset'
+    });
+    resetBtn.onclick = () => { flashcardState[prefix] = { index: 0, flipped: false, results: [] }; render(); };
+    results.appendChild(resetBtn);
+    deck.appendChild(results);
+    return deck;
+  }
+
+  const card = cards[state.index];
+  const fc = el('div', {
+    class: 'flashcard',
+    style: `background:${state.flipped ? color + '11' : COLORS.card.replace('#', '#')};border:1px solid ${state.flipped ? color : COLORS.border};`
+  });
+
+  // Counter
+  fc.appendChild(el('div', {
+    style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:12px;`,
+    text: `${state.index + 1} / ${cards.length}`
+  }));
+
+  if (!state.flipped) {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.q
+    }));
+    fc.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-top:12px;`,
+      text: 'Click to reveal'
+    }));
+    fc.onclick = () => { state.flipped = true; render(); };
+  } else {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.a
+    }));
+    fc.onclick = null;
+  }
+
+  deck.appendChild(fc);
+
+  if (state.flipped) {
+    const btnRow = el('div', { style: 'display:flex;gap:12px;margin-top:12px;justify-content:center;' });
+    const missBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.accent}22;border:1px solid ${COLORS.accent || '#f97316'};color:#fdba74;`,
+      text: 'Missed it'
+    });
+    missBtn.onclick = () => { state.results.push(false); state.index++; state.flipped = false; render(); };
+    const gotBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.success}22;border:1px solid ${COLORS.success};color:#86efac;`,
+      text: 'Got it!'
+    });
+    gotBtn.onclick = () => { state.results.push(true); state.index++; state.flipped = false; render(); };
+    btnRow.appendChild(missBtn);
+    btnRow.appendChild(gotBtn);
+    deck.appendChild(btnRow);
+  }
+
+  return deck;
+}
+
+function renderReferenceSection(sec) {
+  const isQuickRef = sec.title.toLowerCase().includes('quick reference');
+  const wrapper = el('div', {
+    style: `margin-top:${isQuickRef ? 32 : 16}px;background:${isQuickRef ? sec.color + '08' : COLORS.card};border:1px solid ${isQuickRef ? sec.color + '33' : COLORS.border};border-radius:16px;padding:24px;`
+  });
+
+  wrapper.appendChild(el('div', {
+    style: `font-family:'Fraunces',serif;font-size:18px;color:${isQuickRef ? sec.color : COLORS.text};font-weight:600;margin-bottom:16px;`,
+    text: sec.title
+  }));
+
+  const grid = el('div', {
+    style: `display:grid;grid-template-columns:${sec.gridCols};gap:${sec.valueKey === 'val' ? 8 : 12}px;${sec.valueKey === 'val' ? "font-family:'IBM Plex Mono',monospace;font-size:13px;" : ''}`
+  });
+
+  sec.items.forEach(item => {
+    if (sec.valueKey === 'val') {
+      const row = el('div', {
+        style: `display:flex;justify-content:space-between;padding:8px 12px;background:${COLORS.bg}88;border-radius:8px;`
+      }, [
+        el('span', { style: `color:${COLORS.textDim};`, text: item.label }),
+        el('span', { style: `color:${COLORS.text};`, text: item.val }),
+      ]);
+      grid.appendChild(row);
+    } else if (sec.valueKey === 'desc') {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.warm};margin-bottom:4px;font-weight:500;`, text: item.label }),
+        el('div', { style: `font-family:'Source Serif 4',serif;font-size:13px;color:${COLORS.textDim};line-height:1.5;`, text: item.desc }),
+      ]);
+      grid.appendChild(cell);
+    } else {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:4px;`, text: item.label }),
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:14px;color:${COLORS.warm};`, text: item.eq }),
+      ]);
+      grid.appendChild(cell);
+    }
+  });
+
+  wrapper.appendChild(grid);
+  return wrapper;
+}
+
+// === DOM HELPER ===
+function el(tag, opts, children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.style) e.setAttribute('style', opts.style);
+    if (opts.class) e.className = opts.class;
+    if (opts.text) e.textContent = opts.text;
+    if (opts.html) e.innerHTML = opts.html;
+  }
+  if (children) children.forEach(c => { if (c) e.appendChild(c); });
+  return e;
+}
+
+// === INIT ===
+render();
+</script>
+</body>
+</html>

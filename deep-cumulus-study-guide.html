@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moist Convection: Deep Cumulus</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Source+Serif+4:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Serif 4', serif; }
+  button { font-family: inherit; }
+  .concept-card { transition: border-color 0.3s ease; margin-bottom: 16px; border-radius: 16px; overflow: hidden; }
+  .concept-header { padding: 20px 24px; cursor: pointer; display: flex; align-items: center; gap: 16px; }
+  .concept-header:hover { opacity: 0.9; }
+  .arrow { transition: transform 0.3s ease; display: inline-block; }
+  .arrow.open { transform: rotate(180deg); }
+  .flashcard { border-radius: 12px; padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: transform 0.1s ease; }
+  .flashcard:hover { transform: scale(1.01); }
+  .flash-btn { padding: 8px 24px; border-radius: 8px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+  .flash-btn:hover { opacity: 0.85; }
+  .ref-grid-item { border-radius: 10px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// === DATA ===
+const COLORS = {
+  bg: "#0a0e17",
+  card: "#111827",
+  cardHover: "#1a2235",
+  accent: "#38bdf8",      // sky blue — fitting for clouds
+  accentDim: "#0369a1",
+  warm: "#fbbf24",
+  cool: "#a78bfa",
+  green: "#34d399",
+  text: "#e2e8f0",
+  textDim: "#94a3b8",
+  border: "#1e293b",
+  success: "#22c55e",
+  successDim: "#166534",
+};
+
+const concepts = [
+  {
+    id: "deep-vs-shallow",
+    title: "What Makes Deep Convection Different?",
+    icon: "⛈️",
+    color: COLORS.accent,
+    summary:
+      "Deep cumulus convection differs from stratocumulus and shallow cumulus in depth, ice, precipitation, organization, and severe weather potential.",
+    details: [
+      {
+        label: "Where It Occurs",
+        content:
+          "Most common over tropical oceans, tropical continents, and mid-latitude continents. Correlated with high SST (>28°C), convergent surface winds, and high relative humidity. Despite its importance, deep convection is rarer in terms of areal coverage than stratocumulus or shallow convection.",
+      },
+      {
+        label: "Key Differences From Shallow Convection",
+        content:
+          "Deep convection features: ice microphysics, stronger and wider updrafts, greater depth (top bounded by tropopause, not the BL top), greater precipitation, gust fronts and cold pools, lightning, stronger downdrafts, severe weather (hail, tornadoes, straight-line wind), more complicated aerosol interactions, and the potential to organize into larger, longer-lived systems. Radiative effects also differ — anvil clouds are high and cold.",
+      },
+      {
+        label: "Traditional vs. Real View",
+        content:
+          "The idealized view treats deep convection as undilute towers shooting boundary-layer air directly to the tropopause. In reality, convective towers are heterogeneous, mix strongly with the environment, are difficult to separate from it, and interact with mean wind dynamics. Most air in the tropical ascent region is actually descending.",
+      },
+      {
+        label: "Organization",
+        content:
+          "Deep convection commonly organizes into: organized multicell clusters, supercells, squall lines, and mesoscale convective complexes (MCCs). Isolated cells exist but are less common than organized modes.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Where is deep cumulus convection most common, and what environmental conditions favor it?",
+        a: "Over tropical oceans, tropical continents, and mid-latitude continents. Favored by SST > 28°C, convergent surface winds, and high relative humidity.",
+      },
+      {
+        q: "Name five ways deep convection differs from shallow cumulus convection.",
+        a: "Ice microphysics; stronger/wider updrafts; greater depth (top = tropopause); heavier precipitation / cold pools; severe weather potential (hail, tornadoes, lightning).",
+      },
+      {
+        q: "What is the 'traditional' view of deep convection, and why is it too simplistic?",
+        a: "Undilute towers transporting BL air to the tropopause — but in reality towers mix with environment, are hard to isolate, interact with wind shear, and most tropical air is actually descending.",
+      },
+    ],
+  },
+  {
+    id: "lifecycle",
+    title: "Life Cycle of a Convective Shower",
+    icon: "🔄",
+    color: COLORS.cool,
+    summary:
+      "An ordinary thunderstorm passes through three stages: cumulus, mature, and dissipating — with a total lifetime of roughly ½ to 1 hour.",
+    details: [
+      {
+        label: "Cumulus Stage",
+        content:
+          "Similar to non-precipitating convection but with a stronger updraft. Air moves upward from the subcloud layer at all levels. The cloud tower grows vigorously before precipitation forms.",
+      },
+      {
+        label: "Mature Stage",
+        content:
+          "Precipitation forms and alters buoyancy distribution within the cloud, triggering a downdraft at low levels. The downdraft spreads out at the surface to produce a gust front at its leading edge. Buoyancy changes stem from: redistribution of condensed water mass, re-evaporation of precipitation in the sub-saturated environment, mixing of cloud air with the environment, and melting of falling snow, graupel, and hail.",
+      },
+      {
+        label: "Dissipating Stage",
+        content:
+          "The storm can no longer draw up sub-cloud layer air. The updraft collapses, the downdraft decays, and low-level cloud evaporates. The anvil cloud remains long after the convective core is gone.",
+      },
+      {
+        label: "Lifetime Estimate",
+        content:
+          "Total lifetime ≈ H/w₀ (time to grow until precipitation forms) + H/vT (time for precipitation to fall to low levels). Typical result: ~½ to 1 hour. Individual updraft/downdraft diameter ~ 1–2 km, with updraft speed w₀ ~ O(10 m/s).",
+      },
+      {
+        label: "Clustering",
+        content:
+          "Individual cells tend to cluster. A cluster lasts several hours and advects with the mean wind. New cells develop at the gust-front leading edge of the cold pool, where updrafts initiate new convection.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What are the three stages of an ordinary thunderstorm life cycle?",
+        a: "Cumulus stage (growing updraft), Mature stage (precipitation + downdraft + gust front), Dissipating stage (updraft collapses, anvil remains).",
+      },
+      {
+        q: "What causes the downdraft during the mature stage of a thunderstorm?",
+        a: "Changes in buoyancy distribution: re-evaporation of precipitation, redistribution of condensed water mass, mixing with environment, and melting of snow/graupel/hail — all reduce buoyancy and drive the downdraft.",
+      },
+      {
+        q: "Estimate the lifetime of an ordinary thunderstorm using scaling arguments.",
+        a: "Lifetime ≈ H/w₀ + H/vT, where H is cloud depth, w₀ is updraft speed (~10 m/s), and vT is precipitation fall speed. Typical result: ~½ to 1 hour.",
+      },
+      {
+        q: "How do ordinary thunderstorms cluster and sustain themselves?",
+        a: "Individual cells cluster and last hours. New cells form at the gust-front leading edge of the cold pool, which lifts conditionally unstable air and triggers fresh convection.",
+      },
+    ],
+  },
+  {
+    id: "precipitation-dynamics",
+    title: "Precipitation & Buoyancy Dynamics",
+    icon: "🌧️",
+    color: COLORS.warm,
+    summary:
+      "Falling precipitation fundamentally alters buoyancy and makes deep convection strongly irreversible — unlike dry or non-precipitating moist convection.",
+    details: [
+      {
+        label: "Why Precipitation Makes Convection Irreversible",
+        content:
+          "In non-precipitating convection, buoyancy is determined by a parcel's origin, position, and mixing history. Falling precipitation breaks this constraint: it introduces direct negative buoyancy (drag), negative buoyancy from evaporation, and a buoyancy sink from snow melting. These effects are displaced from updrafts by gravity, changing convective geometry and enabling propagation relative to the mean flow.",
+      },
+      {
+        label: "Three Buoyancy Effects of Precipitation",
+        content:
+          "1) Direct negative buoyancy: drag exerted by the weight of condensed water on surrounding air. 2) Evaporative negative buoyancy: precipitation evaporates in sub-saturated air, cooling it. 3) Melting sink: melting of snow and graupel absorbs latent heat, creating a buoyancy sink.",
+      },
+      {
+        label: "Gust Front and Cold Pool",
+        content:
+          "The gust front is associated with a wind shift and replaces ambient, conditionally unstable air with cooler air having lower equivalent potential temperature (θ_e). The spreading cold air moves like a density current (head, nose, turbulent wake structure). It can trigger new convection at its leading edge.",
+      },
+      {
+        label: "Remote Sensing Challenges",
+        content:
+          "The simultaneous presence of ice crystals, liquid drops, and a range of rimed ice species makes remote sensing challenging — hydrometeors are not homogeneous spheres. Fall speeds depend on temperature and history, and there is strong potential for interactions between deep convective dynamics and the aerosol environment.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Name the three ways falling precipitation creates negative buoyancy.",
+        a: "1) Direct drag from condensed water weight. 2) Evaporative cooling in sub-saturated air. 3) Latent heat absorption during snow/graupel melting.",
+      },
+      {
+        q: "What is a cold pool and how does it move?",
+        a: "A pool of cool, low-θ_e air spreading out beneath a precipitating thunderstorm. It moves like a density current with a head, nose, and turbulent wake.",
+      },
+      {
+        q: "Why is precipitating convection described as 'strongly irreversible'?",
+        a: "Falling precipitation removes water from the cloud permanently and deposits it at low levels as rain, breaking the reversibility of the ascent. Buoyancy is no longer tied only to a parcel's displacement history.",
+      },
+      {
+        q: "Why is remote sensing difficult for deep convective clouds?",
+        a: "They contain a mix of ice crystals, liquid drops, and rimed species — not homogeneous spheres — so standard radar/microwave retrieval assumptions break down.",
+      },
+    ],
+  },
+  {
+    id: "gravity-waves",
+    title: "Gravity Waves & Atmospheric Adjustment",
+    icon: "🌊",
+    color: "#34d399",
+    summary:
+      "Deep convection adjusts the far-field temperature profile via gravity wave propagation — not advection — operating on a fast timescale compared to moisture adjustment.",
+    details: [
+      {
+        label: "Convection as a Heat Source?",
+        content:
+          "Net removal of water by precipitation represents a net heat source to the atmosphere. However, the amount and distribution of this heating is strongly determined by the flow itself, so convection CANNOT simply be treated as a prescribed heat source.",
+      },
+      {
+        label: "Gravity Wave Propagation",
+        content:
+          "The temperature profile produced by deep convection is communicated to the rest of the atmosphere through spreading inertia-gravity waves, not advection. Phase speed: cx = NzT/(nπ), where N = √(g/θv · ∂θv/∂z) is the Brunt-Väisälä frequency. Gravity wave phase speed scales with depth, so deep convection adjusts a large region quickly.",
+      },
+      {
+        label: "Fast Temperature, Slow Moisture",
+        content:
+          "Temperature adjustment timescale is set by the gravity wave speed and the distance from the cloud. Moisture adjustment is much slower: it depends on the rate of horizontal stirring along isentropes and the rate of clear-sky subsidence. This mismatch creates disparate timescales for temperature and moisture in convective adjustment.",
+      },
+      {
+        label: "Unlike Dry Convection",
+        content:
+          "In dry Rayleigh-Bénard convection, adjustment occurs via advection. In moist deep convection, adjustment of far-field temperature profiles occurs via gravity waves — even in unsaturated regions far from the active cloud.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Why can't deep convection be treated as a simple heat source to the atmosphere?",
+        a: "The amount and vertical distribution of heating is strongly determined by the convective flow itself — it is not externally specified.",
+      },
+      {
+        q: "How is the temperature profile of deep convection communicated to the rest of the atmosphere?",
+        a: "Through spreading inertia-gravity waves, not by advection. Phase speed cx = NzT/(nπ).",
+      },
+      {
+        q: "Compare the adjustment timescales of temperature and moisture after deep convection.",
+        a: "Temperature adjusts quickly via gravity waves (timescale = distance/wave speed). Moisture adjusts slowly, governed by horizontal stirring along isentropes and clear-sky subsidence.",
+      },
+      {
+        q: "What is the Brunt-Väisälä frequency N and what does it measure?",
+        a: "N = √(g/θv · ∂θv/∂z) — it measures the static stability of the environment and sets the gravity wave phase speed.",
+      },
+    ],
+  },
+  {
+    id: "severe-storms",
+    title: "Severe Convective Storms",
+    icon: "🌪️",
+    color: "#f87171",
+    summary:
+      "High CAPE and strong vertical wind shear are the key ingredients for severe storms, including supercells and their associated tornadoes, hail, and lightning.",
+    details: [
+      {
+        label: "Key Severe Storm Ingredients",
+        content:
+          "Vertical wind shear provides organization and longevity. High CAPE (Convective Available Potential Energy) gives the thermodynamic propensity for strong updrafts — max updraft speed scales as w ~ √(2·CAPE). Some convective inhibition (CIN) and a trigger mechanism are also needed.",
+      },
+      {
+        label: "Supercell Thunderstorm",
+        content:
+          "A single, quasi-steady, long-lived thunderstorm occurring in high-CAPE, high-shear environments. Tilting of horizontal vorticity associated with vertical wind shear generates a rotating updraft (mesocyclone). The mesocyclone can be up to ~10 miles in diameter. Most large, violent tornadoes are very small extensions of the broader mesocyclone rotation and come from supercells.",
+      },
+      {
+        label: "Hail Formation",
+        content:
+          "Supercooled water and ice coexist in deep convective clouds. Repeated cycling of tiny ice pellets through the cloud with supercooled water builds up hail. Fast updrafts are required to keep hail suspended long enough to grow large. When hail grows too large for the updraft to support, it falls to the surface.",
+      },
+      {
+        label: "Lightning",
+        content:
+          "Ice-graupel collisions inside the cloud lead to charge separation: lighter positive charges are swept to the top of the cloud while heavier negative charges accumulate in the middle. This charge separation allows lightning discharge.",
+      },
+      {
+        label: "Mammatus Clouds",
+        content:
+          "Distinctive pouch-like formations hanging from the underside of anvil clouds, commonly observed near the trailing edge of severe thunderstorms and supercells.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What are the two primary environmental ingredients for severe convective storms?",
+        a: "High CAPE (strong thermodynamic instability → strong updrafts) and strong vertical wind shear (provides organization and longevity).",
+      },
+      {
+        q: "How does a supercell develop its rotating updraft (mesocyclone)?",
+        a: "Vertical wind shear creates horizontal vorticity tubes. Strong updrafts tilt these horizontal vorticity tubes into the vertical, generating rotation. The mesocyclone can be ~10 miles in diameter.",
+      },
+      {
+        q: "What updraft speed scaling relates to CAPE?",
+        a: "w ~ √(2 · CAPE). Higher CAPE means stronger potential updraft velocities.",
+      },
+      {
+        q: "What physical process produces lightning inside a thunderstorm?",
+        a: "Ice-graupel collisions cause charge separation: positive charges move to cloud top, negative charges accumulate in the middle. When the electric field becomes large enough, lightning discharges.",
+      },
+      {
+        q: "Why do fast updrafts favor large hail?",
+        a: "Larger hailstones are heavier; fast updrafts keep them suspended longer, allowing repeated cycling through supercooled water to build up more ice layers.",
+      },
+    ],
+  },
+  {
+    id: "environments",
+    title: "Triggered vs. Quasi-Equilibrium Convection",
+    icon: "📈",
+    color: COLORS.warm,
+    summary:
+      "Two contrasting paradigms describe when and how deep convection occurs, distinguished by the relationship between CAPE and convective inhibition (CIN).",
+    details: [
+      {
+        label: "Triggered (Episodic) Convection",
+        content:
+          "CAPE builds up over time while a capping inversion (CIN) suppresses convection. When a trigger (e.g., frontal lifting, sea breeze, orographic forcing) overcomes the cap, convection fires explosively with high CAPE. Example: Great Plains supercell environments (Norman, OK sounding on 09 May 2003 shows CAPE ~3816 J/kg with significant CIN).",
+      },
+      {
+        label: "Quasi-Equilibrium (QE) Convection",
+        content:
+          "Large-scale forcing (e.g., convergence, surface fluxes) continuously generates CAPE, which deep convection continuously consumes. CAPE stays low because convection keeps pace with forcing. Example: tropical oceanic environments (Truk, western Pacific — CAPE ~882 J/kg, very high PWAT ~59 mm). The atmosphere is never far from convective neutrality.",
+      },
+      {
+        label: "Distinguishing Features on Soundings",
+        content:
+          "Triggered environments show large CAPE (wide loop on skew-T) with a notable CIN 'cap'. QE environments show modest CAPE, small CIN, high humidity throughout, and large precipitable water. Both can support deep convection, but via different pathways.",
+      },
+      {
+        label: "Implications for Parameterization",
+        content:
+          "Climate models must parameterize deep convection. Quasi-equilibrium theory underpins many convective parameterization schemes, which assume convection quickly removes CAPE generated by large-scale forcing. In triggered regimes this assumption breaks down.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What distinguishes triggered from quasi-equilibrium deep convection?",
+        a: "Triggered: CAPE accumulates behind a CIN cap and releases episodically when a trigger overcomes the cap. QE: convection continuously consumes CAPE as fast as large-scale forcing generates it — atmosphere stays near neutral.",
+      },
+      {
+        q: "Give an example of a triggered convection environment and a quasi-equilibrium environment.",
+        a: "Triggered: U.S. Great Plains (Norman, OK, May 2003 — CAPE ~3816 J/kg). QE: tropical western Pacific (Truk — CAPE ~882 J/kg, high humidity, high PWAT).",
+      },
+      {
+        q: "What is convective inhibition (CIN) and what role does it play?",
+        a: "CIN is the energy barrier (negative area on a skew-T) that a parcel must overcome to reach its level of free convection. It suppresses convection, allowing CAPE to build in triggered regimes.",
+      },
+    ],
+  },
+  {
+    id: "anvil-clouds",
+    title: "Anvil Clouds & FAT Hypothesis",
+    icon: "☁️",
+    color: COLORS.accent,
+    summary:
+      "Anvil clouds form from deep convective outflow near the tropopause. The Fixed Anvil Temperature (FAT) hypothesis proposes that anvil height is set by a robust thermodynamic constraint.",
+    details: [
+      {
+        label: "Anvil Cloud Properties",
+        content:
+          "Anvil clouds form from the outflow of deep convection at the tropopause level. They are high, cold, and composed of ice. They cover a large area relative to the convective core that generated them, and persist long after the deep convective tower dissipates.",
+      },
+      {
+        label: "Fixed Anvil Temperature (FAT) Hypothesis",
+        content:
+          "The FAT hypothesis proposes that anvil clouds preferentially form at the altitude where radiative cooling of the atmosphere sharply decreases with height. At this level, clear-sky subsidence weakens rapidly, trapping outflow there. Because this temperature level is relatively fixed in the tropics, anvil temperatures change little with surface warming — a possible negative climate feedback.",
+      },
+      {
+        label: "Overshooting Tops",
+        content:
+          "Vigorous updrafts with extra momentum can overshoot above the level of neutral buoyancy and the spreading anvil, penetrating slightly into the stratosphere before being pushed back down. These are visible as dome-like protrusions above the anvil top.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What are three characteristics of anvil clouds?",
+        a: "High and cold (near tropopause); composed of ice; form from deep convective outflow; cover large area; persist after core dissipates.",
+      },
+      {
+        q: "What is the Fixed Anvil Temperature (FAT) hypothesis?",
+        a: "Anvil clouds form preferentially at the altitude where clear-sky radiative cooling decreases sharply with height — a level with a relatively fixed temperature in the tropics, potentially providing a negative climate feedback.",
+      },
+      {
+        q: "What are overshooting tops?",
+        a: "Vigorous updrafts that overshoot the level of neutral buoyancy and the spreading anvil, briefly penetrating the lower stratosphere before being pushed back.",
+      },
+    ],
+  },
+  {
+    id: "key-points",
+    title: "Key Points Summary",
+    icon: "📋",
+    color: COLORS.green,
+    summary:
+      "Seven take-home messages from the deep cumulus convection lectures — the core ideas to carry forward.",
+    details: [
+      {
+        label: "1 — Gravity Wave Adjustment",
+        content:
+          "Far-field temperature profiles, even if unsaturated, adjust in response to deep convection via gravity waves.",
+      },
+      {
+        label: "2 — Strong Irreversibility",
+        content:
+          "Deep cumulus convection is strongly irreversible due to precipitation.",
+      },
+      {
+        label: "3 — Precipitation Alters Dynamics",
+        content:
+          "Precipitation alters the dynamics of convection through direct drag, evaporative cooling, and melting, creating downdrafts and cold pools.",
+      },
+      {
+        label: "4 — Ice Microphysics",
+        content:
+          "Ice microphysics introduces new complications: charge separation, hail formation, radar retrieval challenges, and aerosol interactions.",
+      },
+      {
+        label: "5 — Severe Weather",
+        content:
+          "Deep convection can result in severe weather: tornadoes, large hail, damaging straight-line winds, and lightning.",
+      },
+      {
+        label: "6 — Two Paradigms",
+        content:
+          "The triggered versus quasi-equilibrium views represent two fundamentally different ways that deep convection relates to its environment.",
+      },
+      {
+        label: "7 — Organized Convection",
+        content:
+          "Deep convection is commonly organized into multicell clusters, squall lines, supercells, and mesoscale convective complexes.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "List the 7 key points from the deep cumulus convection lectures.",
+        a: "1) Far-field T adjusts via gravity waves. 2) Strongly irreversible due to precipitation. 3) Precipitation alters convective dynamics. 4) Ice microphysics adds complications. 5) Can produce severe weather. 6) Triggered vs. quasi-equilibrium views. 7) Convection is commonly organized.",
+      },
+      {
+        q: "Why is deep convection considered 'strongly irreversible' but dry Rayleigh-Bénard convection is not?",
+        a: "Precipitation permanently removes water from the cloud and deposits it at low levels. There is no way to 'reverse' this — unlike dry overturning where the fluid is simply displaced and can return.",
+      },
+    ],
+  },
+];
+
+const referenceSections = [];
+
+// === STATE ===
+let openId = null;
+const flashcardState = {};
+
+function initFlashcardState(cards, prefix) {
+  if (!flashcardState[prefix]) {
+    flashcardState[prefix] = { index: 0, flipped: false, results: [] };
+  }
+}
+
+// === RENDER ===
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const root = el('div', {
+    style: `min-height:100vh;background:${COLORS.bg};padding:40px 20px;font-family:'Source Serif 4',serif;`
+  });
+
+  const container = el('div', { style: 'max-width:720px;margin:0 auto;' });
+
+  // Header
+  container.appendChild(el('div', { style: 'text-align:center;margin-bottom:48px;' }, [
+    el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.accent};text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;`,
+      text: "MET 5537 — Study Guide"
+    }),
+    el('h1', {
+      style: `font-family:'Fraunces',serif;font-size:36px;font-weight:700;color:${COLORS.text};line-height:1.2;margin:0;`,
+      html: `Moist Convection:<br><span style="color:${COLORS.accent}">Deep Cumulus</span>`
+    }),
+    el('p', {
+      style: `font-size:15px;color:${COLORS.textDim};margin-top:16px;line-height:1.6;max-width:500px;margin-left:auto;margin-right:auto;`,
+      text: "Expand each topic for detailed notes and self-test flashcards drawn from Prof. Wing's lectures on deep cumulus convection."
+    }),
+  ]));
+
+  // Concept Cards
+  concepts.forEach(c => {
+    container.appendChild(renderConceptCard(c));
+  });
+
+  // Reference Sections
+  referenceSections.forEach(sec => {
+    container.appendChild(renderReferenceSection(sec));
+  });
+
+  // Footer
+  container.appendChild(el('div', {
+    style: `margin-top:32px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};`,
+    text: "Based on lectures by Prof. Allison Wing — MET 5537"
+  }));
+
+  root.appendChild(container);
+  app.appendChild(root);
+}
+
+function renderConceptCard(c) {
+  const isOpen = openId === c.id;
+  const card = el('div', {
+    class: 'concept-card',
+    style: `background:${COLORS.card};border:1px solid ${isOpen ? c.color : COLORS.border};`
+  });
+
+  // Header
+  const header = el('div', { class: 'concept-header' }, [
+    el('span', { style: 'font-size:28px;', text: c.icon }),
+    el('div', { style: 'flex:1;' }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.text};font-weight:600;`,
+        text: c.title
+      }),
+      el('div', {
+        style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.textDim};margin-top:4px;line-height:1.5;`,
+        text: c.summary
+      }),
+    ]),
+    el('span', {
+      class: 'arrow' + (isOpen ? ' open' : ''),
+      style: `color:${c.color};font-size:20px;`,
+      text: '▾'
+    }),
+  ]);
+
+  header.onclick = () => { openId = (openId === c.id) ? null : c.id; render(); };
+  card.appendChild(header);
+
+  if (isOpen) {
+    const body = el('div', { style: 'padding:0 24px 24px;' });
+    body.appendChild(el('div', { style: `height:1px;background:${COLORS.border};margin-bottom:20px;` }));
+
+    // Key Details label
+    body.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;`,
+      text: 'Key Details'
+    }));
+
+    // Details
+    c.details.forEach(d => {
+      body.appendChild(el('div', {
+        style: `margin-bottom:16px;padding-left:16px;border-left:2px solid ${c.color}33;`
+      }, [
+        el('div', {
+          style: `font-family:'Fraunces',serif;font-size:15px;color:${c.color};font-weight:600;margin-bottom:4px;`,
+          text: d.label
+        }),
+        el('div', {
+          style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.text};line-height:1.7;opacity:0.9;`,
+          text: d.content
+        }),
+      ]));
+    });
+
+    // Flashcards
+    body.appendChild(el('div', {
+      style: `margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;`,
+      text: 'Self-Test Flashcards'
+    }));
+    body.appendChild(renderFlashcardDeck(c.flashcards, c.color, c.id));
+
+    card.appendChild(body);
+  }
+
+  return card;
+}
+
+function renderFlashcardDeck(cards, color, prefix) {
+  initFlashcardState(cards, prefix);
+  const state = flashcardState[prefix];
+  const deck = el('div');
+
+  if (state.index >= cards.length) {
+    // Results
+    const correct = state.results.filter(r => r).length;
+    const pct = Math.round((correct / cards.length) * 100);
+    const results = el('div', {
+      style: `background:${COLORS.success}11;border:1px solid ${COLORS.success}33;border-radius:12px;padding:20px;text-align:center;`
+    }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.success};margin-bottom:8px;`,
+        text: `${pct}% — ${correct}/${cards.length} correct`
+      }),
+      el('div', {
+        style: `font-size:13px;color:${COLORS.textDim};margin-bottom:16px;`,
+        text: pct === 100 ? 'Perfect score!' : pct >= 70 ? 'Good job! Review the ones you missed.' : 'Keep studying — you\'ll get there!'
+      }),
+    ]);
+    const resetBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${color}22;border:1px solid ${color};color:${color};`,
+      text: 'Reset'
+    });
+    resetBtn.onclick = () => { flashcardState[prefix] = { index: 0, flipped: false, results: [] }; render(); };
+    results.appendChild(resetBtn);
+    deck.appendChild(results);
+    return deck;
+  }
+
+  const card = cards[state.index];
+  const fc = el('div', {
+    class: 'flashcard',
+    style: `background:${state.flipped ? color + '11' : COLORS.card.replace('#', '#')};border:1px solid ${state.flipped ? color : COLORS.border};`
+  });
+
+  // Counter
+  fc.appendChild(el('div', {
+    style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:12px;`,
+    text: `${state.index + 1} / ${cards.length}`
+  }));
+
+  if (!state.flipped) {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.q
+    }));
+    fc.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-top:12px;`,
+      text: 'Click to reveal'
+    }));
+    fc.onclick = () => { state.flipped = true; render(); };
+  } else {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.a
+    }));
+    fc.onclick = null;
+  }
+
+  deck.appendChild(fc);
+
+  if (state.flipped) {
+    const btnRow = el('div', { style: 'display:flex;gap:12px;margin-top:12px;justify-content:center;' });
+    const missBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.accent}22;border:1px solid ${COLORS.accent || '#f97316'};color:#fdba74;`,
+      text: 'Missed it'
+    });
+    missBtn.onclick = () => { state.results.push(false); state.index++; state.flipped = false; render(); };
+    const gotBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.success}22;border:1px solid ${COLORS.success};color:#86efac;`,
+      text: 'Got it!'
+    });
+    gotBtn.onclick = () => { state.results.push(true); state.index++; state.flipped = false; render(); };
+    btnRow.appendChild(missBtn);
+    btnRow.appendChild(gotBtn);
+    deck.appendChild(btnRow);
+  }
+
+  return deck;
+}
+
+function renderReferenceSection(sec) {
+  const isQuickRef = sec.title.toLowerCase().includes('quick reference');
+  const wrapper = el('div', {
+    style: `margin-top:${isQuickRef ? 32 : 16}px;background:${isQuickRef ? sec.color + '08' : COLORS.card};border:1px solid ${isQuickRef ? sec.color + '33' : COLORS.border};border-radius:16px;padding:24px;`
+  });
+
+  wrapper.appendChild(el('div', {
+    style: `font-family:'Fraunces',serif;font-size:18px;color:${isQuickRef ? sec.color : COLORS.text};font-weight:600;margin-bottom:16px;`,
+    text: sec.title
+  }));
+
+  const grid = el('div', {
+    style: `display:grid;grid-template-columns:${sec.gridCols};gap:${sec.valueKey === 'val' ? 8 : 12}px;${sec.valueKey === 'val' ? "font-family:'IBM Plex Mono',monospace;font-size:13px;" : ''}`
+  });
+
+  sec.items.forEach(item => {
+    if (sec.valueKey === 'val') {
+      const row = el('div', {
+        style: `display:flex;justify-content:space-between;padding:8px 12px;background:${COLORS.bg}88;border-radius:8px;`
+      }, [
+        el('span', { style: `color:${COLORS.textDim};`, text: item.label }),
+        el('span', { style: `color:${COLORS.text};`, text: item.val }),
+      ]);
+      grid.appendChild(row);
+    } else if (sec.valueKey === 'desc') {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.warm};margin-bottom:4px;font-weight:500;`, text: item.label }),
+        el('div', { style: `font-family:'Source Serif 4',serif;font-size:13px;color:${COLORS.textDim};line-height:1.5;`, text: item.desc }),
+      ]);
+      grid.appendChild(cell);
+    } else {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:4px;`, text: item.label }),
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:14px;color:${COLORS.warm};`, text: item.eq }),
+      ]);
+      grid.appendChild(cell);
+    }
+  });
+
+  wrapper.appendChild(grid);
+  return wrapper;
+}
+
+// === DOM HELPER ===
+function el(tag, opts, children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.style) e.setAttribute('style', opts.style);
+    if (opts.class) e.className = opts.class;
+    if (opts.text) e.textContent = opts.text;
+    if (opts.html) e.innerHTML = opts.html;
+  }
+  if (children) children.forEach(c => { if (c) e.appendChild(c); });
+  return e;
+}
+
+// === INIT ===
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convective Boundary Layers</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Source+Serif+4:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Serif 4', serif; }
+  button { font-family: inherit; }
+  .concept-card { transition: border-color 0.3s ease; margin-bottom: 16px; border-radius: 16px; overflow: hidden; }
+  .concept-header { padding: 20px 24px; cursor: pointer; display: flex; align-items: center; gap: 16px; }
+  .concept-header:hover { opacity: 0.9; }
+  .arrow { transition: transform 0.3s ease; display: inline-block; }
+  .arrow.open { transform: rotate(180deg); }
+  .flashcard { border-radius: 12px; padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: transform 0.1s ease; }
+  .flashcard:hover { transform: scale(1.01); }
+  .flash-btn { padding: 8px 24px; border-radius: 8px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+  .flash-btn:hover { opacity: 0.85; }
+  .ref-grid-item { border-radius: 10px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// === DATA ===
+const COLORS = {
+  bg: "#0b0f1a",
+  card: "#111827",
+  accent: "#e85d04",
+  warm: "#fbbf24",
+  cool: "#38bdf8",
+  violet: "#a78bfa",
+  emerald: "#34d399",
+  rose: "#fb7185",
+  text: "#e2e8f0",
+  textDim: "#94a3b8",
+  border: "#1e293b",
+  success: "#22c55e",
+  successDim: "#166534",
+};
+
+const concepts = [
+  {
+    id: "prandtl-vs-rb",
+    title: "Semi-Infinite Prandtl Problem vs. Rayleigh-Bénard",
+    icon: "🔄",
+    color: COLORS.accent,
+    summary:
+      "The semi-infinite Prandtl problem — a fluid heated from below with no rigid lid and internal cooling — is a better idealization of dry atmospheric convection than the classical Rayleigh-Bénard setup.",
+    details: [
+      {
+        label: "Why R-B Falls Short",
+        content:
+          "Rayleigh-Bénard assumes two rigid plates, constant temperature boundaries, smooth surfaces, no rotation, no mean winds, and no internal cooling. Real atmospheric convection violates all of these assumptions, and Ra in the atmosphere (10¹⁷–10²²) far exceeds lab capabilities (~10¹¹).",
+      },
+      {
+        label: "The Semi-Infinite Layer",
+        content:
+          "Consider a semi-infinite fluid with its lower boundary maintained at a fixed temperature, cooled at a volume-integrated rate Q₀. In equilibrium, the heat sink Q is balanced by the surface buoyancy flux: Q₀ = w'B' = F_B. There is no rigid upper lid — the fluid extends upward indefinitely.",
+      },
+      {
+        label: "The Prandtl Problem",
+        content:
+          "The Prandtl problem is the same semi-infinite setup, but with a uniform buoyancy source (constant flux) rather than a fixed temperature at the surface. The surface is physically rough with roughness length z₀ᵀ. This is a less-studied but more atmospherically relevant corollary to Rayleigh-Bénard.",
+      },
+      {
+        label: "Advantages Over R-B",
+        content:
+          "The Prandtl problem addresses most R-B limitations: no rigid lid, internal radiative cooling, constant flux boundary condition, rough surface, and fully turbulent regime. The scalings it produces apply generally to fully turbulent dry boundary layers, whether atmospheric or oceanic.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Why is the semi-infinite Prandtl problem a better idealization of atmospheric dry convection than Rayleigh-Bénard?",
+        a: "It has no rigid upper lid, uses a constant flux (rather than constant temperature) boundary condition, includes internal cooling, accounts for surface roughness, and applies to fully turbulent regimes — all more realistic for the atmosphere.",
+      },
+      {
+        q: "What is the key difference between the semi-infinite layer problem and the Prandtl problem?",
+        a: "The semi-infinite layer has a fixed temperature at the lower boundary; the Prandtl problem has a uniform buoyancy source (constant flux) at the surface instead.",
+      },
+      {
+        q: "List at least 5 problems with Rayleigh-Bénard as a model for atmospheric convection.",
+        a: "1) No rotation, 2) No mean winds/shear, 3) Smooth surfaces, 4) Rigid upper lid, 5) No internal radiative cooling, 6) Constant temperature (not flux) BCs, 7) Atmospheric Ra >> lab Ra.",
+      },
+    ],
+  },
+  {
+    id: "convective-velocity",
+    title: "Convective Velocity Scale: w* ~ (F_B z)^(1/3)",
+    icon: "💨",
+    color: COLORS.cool,
+    summary:
+      "Dimensional analysis of the semi-infinite layer yields the key convective velocity scaling w* ~ (F_B z)^(1/3), where molecular diffusivity is disregarded.",
+    details: [
+      {
+        label: "Dimensional Analysis",
+        content:
+          "With only two governing parameters — the buoyancy flux F_B (units m²/s³) and height z (units m) — and disregarding molecular diffusivity, dimensional analysis gives: w* ~ (F_B · z)^(1/3). This is the turbulent convective velocity scale.",
+      },
+      {
+        label: "Buoyancy Scale",
+        content:
+          "Similarly, the buoyancy perturbation scale is B* ~ gβT' ~ F_B^(2/3) z^(−1/3). Buoyancy perturbations decrease with height (diluted by entrainment and mixing over a larger volume), while velocity increases with height.",
+      },
+      {
+        label: "Contrast with Mechanical Turbulence",
+        content:
+          "The convective velocity scale w* increases with z (height-dependent), unlike mechanically-generated turbulence where the velocity scale q ~ M^(1/2) is independent of height. This fundamental difference controls the structure of the boundary layer.",
+      },
+      {
+        label: "Surface Roughness Limitation",
+        content:
+          "Neglecting molecular diffusivity predicts infinite temperature variations at z → 0. In reality, a thin diffusive boundary layer exists near the surface. Surface roughness elements exceed the diffusive layer depth, so the scalings apply only for z > z₀ᵀ (the thermal roughness length).",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is the convective velocity scaling and how is it derived?",
+        a: "w* ~ (F_B · z)^(1/3), derived from dimensional analysis using only the buoyancy flux F_B and height z, disregarding molecular diffusivity.",
+      },
+      {
+        q: "How does the buoyancy perturbation scale with height?",
+        a: "B* ~ F_B^(2/3) · z^(−1/3) — buoyancy perturbations decrease with height.",
+      },
+      {
+        q: "How does convective turbulence velocity differ from mechanical turbulence velocity in its height dependence?",
+        a: "Convective: w* ~ (F_B z)^(1/3), increases with z. Mechanical: q ~ M^(1/2), independent of z.",
+      },
+      {
+        q: "Why do the semi-infinite layer scalings break down very near the surface?",
+        a: "Neglecting molecular diffusivity predicts infinite temperature variations at z → 0. A thin diffusive boundary layer exists, and surface roughness elements exceed its depth. Scalings only apply for z > z₀ᵀ.",
+      },
+    ],
+  },
+  {
+    id: "boundary-layer-structure",
+    title: "Convective Boundary Layer Structure",
+    icon: "📊",
+    color: COLORS.violet,
+    summary:
+      "The convective boundary layer has distinct sub-layers: a surface layer (mechanical turbulence dominates), a mixed layer (convective turbulence, well-mixed profiles), an entrainment zone, and the free atmosphere above.",
+    details: [
+      {
+        label: "Surface Layer",
+        content:
+          "Extends from the surface to z ~ −L (the Monin-Obukhov length, typically ~100 m). Mechanical turbulence from surface wind shear dominates here. Wind profiles follow a logarithmic law: ū(z) = c₃M^(1/2) ln(z/z₀), hence these are called 'log layers.'",
+      },
+      {
+        label: "Mixed Layer",
+        content:
+          "Above the surface layer, convective turbulence dominates. Profiles of θᵥ, q̄, and M̄ are nearly uniform (well-mixed) through this layer. Buoyancy flux w'θᵥ' decreases approximately linearly with height from its surface value.",
+      },
+      {
+        label: "Entrainment Zone",
+        content:
+          "At the top of the boundary layer (between h₀ and h₂, centered at z₁), there is an entrainment zone where overshooting thermals penetrate into the stable free atmosphere. This is where the inversion is located. Buoyancy flux is negative here (entrainment warming mixes stable air downward).",
+      },
+      {
+        label: "Free Atmosphere",
+        content:
+          "Above the entrainment zone is the free atmosphere, which is stably stratified. The boundary layer communicates surface properties to this region through the entrainment process. Surface layer + mixed layer together constitute the boundary layer.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What are the main sub-layers of the convective boundary layer from bottom to top?",
+        a: "Surface layer (z < −L, ~100 m, mechanical turbulence) → Mixed layer (convective turbulence, well-mixed) → Entrainment zone (at inversion, overshooting thermals) → Free atmosphere (stably stratified).",
+      },
+      {
+        q: "What is the Monin-Obukhov length and what does it represent?",
+        a: "L = −M^(3/2) Q₀⁻¹ — it's the altitude scale separating primarily mechanical turbulence (z < −L) from primarily convective turbulence (z > −L). It represents the ratio of integrated momentum and buoyancy sinks. Typically ~100 m.",
+      },
+      {
+        q: "What does the buoyancy flux profile look like through the convective BL?",
+        a: "Positive and maximum at the surface, decreasing approximately linearly with height through the mixed layer, becoming negative in the entrainment zone (where stable air is mixed down).",
+      },
+      {
+        q: "Why are mechanically turbulent layers called 'log layers'?",
+        a: "Because the mean wind profile follows a logarithmic law: ū(z) = c₃M^(1/2) ln(z/z₀), where z₀ is the roughness length and 1/c₃ is the von Kármán constant (~0.35–0.4).",
+      },
+    ],
+  },
+  {
+    id: "monin-obukhov",
+    title: "Monin-Obukhov Similarity & Mean Wind",
+    icon: "🌬️",
+    color: COLORS.warm,
+    summary:
+      "The Monin-Obukhov length L separates the mechanical and convective turbulence regimes. Mean wind generates mechanical turbulence with a height-independent velocity scale, unlike buoyancy-driven convection.",
+    details: [
+      {
+        label: "Mechanical Turbulence",
+        content:
+          "Mean wind generates mechanical turbulence through interaction with the surface. The integrated momentum flux M = ∫(du/dt)dz = u'w' has units m²/s². The turbulent velocity scale q ~ M^(1/2) is independent of height — unlike convective turbulence.",
+      },
+      {
+        label: "Monin-Obukhov Length",
+        content:
+          "L = −(u'w')^(3/2) / (w'B') — the ratio of integrated momentum and buoyancy sinks. For a positive surface buoyancy flux, L < 0. The magnitude |L| is the altitude scale where convective and mechanical turbulence contributions are comparable.",
+      },
+      {
+        label: "Two Extreme Limits",
+        content:
+          "−L → 0 (purely convective): no mean wind, all turbulence is buoyancy-driven. −L → ∞ (purely mechanical): strong winds, neutral stratification, turbulence entirely from wind shear. Real boundary layers fall between these limits.",
+      },
+      {
+        label: "Flux-Profile Relations",
+        content:
+          "Monin-Obukhov similarity theory allows developing equations for profiles of temperature, wind, etc. based on surface fluxes. These can also be inverted to diagnose fluxes from observed profiles — a key tool for boundary layer meteorology.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Write the Monin-Obukhov length and explain its sign.",
+        a: "L = −(u'w')^(3/2) / (w'B'). For positive surface buoyancy flux (daytime heating), L < 0. Its magnitude is the height where mechanical and convective turbulence are comparable.",
+      },
+      {
+        q: "How does the turbulent velocity scale differ between mechanical and convective turbulence?",
+        a: "Mechanical: q ~ M^(1/2), independent of height. Convective: w* ~ (F_B z)^(1/3), increases with height.",
+      },
+      {
+        q: "What are the two extreme limits of Monin-Obukhov similarity?",
+        a: "−L → 0: purely convective (no mean wind). −L → ∞: purely mechanical (strong wind, neutral stratification).",
+      },
+    ],
+  },
+  {
+    id: "coupling",
+    title: "BL Couples Surface to Free Atmosphere",
+    icon: "🔗",
+    color: COLORS.emerald,
+    summary:
+      "The turbulent boundary layer is the critical link that communicates surface properties (heat, moisture, momentum) to the free atmosphere, coupling surface processes to moist convection above.",
+    details: [
+      {
+        label: "Communication Role",
+        content:
+          "The boundary layer transmits everything from the surface to the free atmosphere. Surface heat fluxes, moisture fluxes, and momentum fluxes are all communicated upward through turbulent mixing in the BL, ultimately reaching the entrainment zone and free atmosphere.",
+      },
+      {
+        label: "Coupling to Moist Convection",
+        content:
+          "This coupling is especially important because the boundary layer feeds moist convection. The thermodynamic properties of air entering cumulus cloud bases are set by BL processes — surface evaporation, sensible heat flux, and turbulent mixing all determine the properties of air that fuels deep convection.",
+      },
+      {
+        label: "Convectively Neutral Interior",
+        content:
+          "Just as in Rayleigh-Bénard, the interior of highly turbulent, high-Ra convective boundary layers develops a convectively neutral average temperature profile. The mixed layer is nearly uniform in θᵥ, q̄, and wind speed.",
+      },
+      {
+        label: "Typical Profiles",
+        content:
+          "θᵥ is nearly constant in the mixed layer with a superadiabatic surface layer and sharp inversion at the top. Specific humidity q̄ is well-mixed with a sharp decrease at inversion. Wind speed M̄ increases in the surface layer then is roughly uniform, with geostrophic wind (M̄_G) above.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Why is the turbulent boundary layer so important for moist convection?",
+        a: "It communicates everything from the surface to the free atmosphere — heat, moisture, and momentum fluxes are transmitted upward through turbulent mixing, setting the thermodynamic properties of air that fuels deep convection.",
+      },
+      {
+        q: "What does the θᵥ profile look like in a typical convective BL?",
+        a: "Superadiabatic near the surface (surface layer), nearly constant through the mixed layer (convectively neutral), then a sharp increase at the inversion/entrainment zone, with stable stratification in the free atmosphere above.",
+      },
+      {
+        q: "What happens to moisture and momentum profiles in the mixed layer?",
+        a: "Both are approximately well-mixed (uniform). Specific humidity decreases sharply at the inversion. Wind speed is roughly uniform in the mixed layer with a logarithmic profile in the surface layer below.",
+      },
+    ],
+  },
+];
+
+const referenceSections = [];
+
+// === STATE ===
+let openId = null;
+const flashcardState = {};
+
+function initFlashcardState(cards, prefix) {
+  if (!flashcardState[prefix]) {
+    flashcardState[prefix] = { index: 0, flipped: false, results: [] };
+  }
+}
+
+// === RENDER ===
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const root = el('div', {
+    style: `min-height:100vh;background:${COLORS.bg};padding:40px 20px;font-family:'Source Serif 4',serif;`
+  });
+
+  const container = el('div', { style: 'max-width:720px;margin:0 auto;' });
+
+  // Header
+  container.appendChild(el('div', { style: 'text-align:center;margin-bottom:48px;' }, [
+    el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.accent};text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;`,
+      text: "MET 5537 — Study Guide"
+    }),
+    el('h1', {
+      style: `font-family:'Fraunces',serif;font-size:36px;font-weight:700;color:${COLORS.text};line-height:1.2;margin:0;`,
+      html: `Convective<br><span style="color:${COLORS.accent}">Boundary Layers</span>`
+    }),
+    el('p', {
+      style: `font-size:15px;color:${COLORS.textDim};margin-top:16px;line-height:1.6;max-width:500px;margin-left:auto;margin-right:auto;`,
+      text: "From Rayleigh-Bénard limitations to the Prandtl problem, convective velocity scalings, Monin-Obukhov theory, and BL structure."
+    }),
+  ]));
+
+  // Concept Cards
+  concepts.forEach(c => {
+    container.appendChild(renderConceptCard(c));
+  });
+
+  // Reference Sections
+  referenceSections.forEach(sec => {
+    container.appendChild(renderReferenceSection(sec));
+  });
+
+  // Footer
+  container.appendChild(el('div', {
+    style: `margin-top:32px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};`,
+    text: "Based on lectures by Prof. Allison Wing — MET 5537"
+  }));
+
+  root.appendChild(container);
+  app.appendChild(root);
+}
+
+function renderConceptCard(c) {
+  const isOpen = openId === c.id;
+  const card = el('div', {
+    class: 'concept-card',
+    style: `background:${COLORS.card};border:1px solid ${isOpen ? c.color : COLORS.border};`
+  });
+
+  // Header
+  const header = el('div', { class: 'concept-header' }, [
+    el('span', { style: 'font-size:28px;', text: c.icon }),
+    el('div', { style: 'flex:1;' }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.text};font-weight:600;`,
+        text: c.title
+      }),
+      el('div', {
+        style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.textDim};margin-top:4px;line-height:1.5;`,
+        text: c.summary
+      }),
+    ]),
+    el('span', {
+      class: 'arrow' + (isOpen ? ' open' : ''),
+      style: `color:${c.color};font-size:20px;`,
+      text: '▾'
+    }),
+  ]);
+
+  header.onclick = () => { openId = (openId === c.id) ? null : c.id; render(); };
+  card.appendChild(header);
+
+  if (isOpen) {
+    const body = el('div', { style: 'padding:0 24px 24px;' });
+    body.appendChild(el('div', { style: `height:1px;background:${COLORS.border};margin-bottom:20px;` }));
+
+    // Key Details label
+    body.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;`,
+      text: 'Key Details'
+    }));
+
+    // Details
+    c.details.forEach(d => {
+      body.appendChild(el('div', {
+        style: `margin-bottom:16px;padding-left:16px;border-left:2px solid ${c.color}33;`
+      }, [
+        el('div', {
+          style: `font-family:'Fraunces',serif;font-size:15px;color:${c.color};font-weight:600;margin-bottom:4px;`,
+          text: d.label
+        }),
+        el('div', {
+          style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.text};line-height:1.7;opacity:0.9;`,
+          text: d.content
+        }),
+      ]));
+    });
+
+    // Flashcards
+    body.appendChild(el('div', {
+      style: `margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;`,
+      text: 'Self-Test Flashcards'
+    }));
+    body.appendChild(renderFlashcardDeck(c.flashcards, c.color, c.id));
+
+    card.appendChild(body);
+  }
+
+  return card;
+}
+
+function renderFlashcardDeck(cards, color, prefix) {
+  initFlashcardState(cards, prefix);
+  const state = flashcardState[prefix];
+  const deck = el('div');
+
+  if (state.index >= cards.length) {
+    // Results
+    const correct = state.results.filter(r => r).length;
+    const pct = Math.round((correct / cards.length) * 100);
+    const results = el('div', {
+      style: `background:${COLORS.success}11;border:1px solid ${COLORS.success}33;border-radius:12px;padding:20px;text-align:center;`
+    }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.success};margin-bottom:8px;`,
+        text: `${pct}% — ${correct}/${cards.length} correct`
+      }),
+      el('div', {
+        style: `font-size:13px;color:${COLORS.textDim};margin-bottom:16px;`,
+        text: pct === 100 ? 'Perfect score!' : pct >= 70 ? 'Good job! Review the ones you missed.' : 'Keep studying — you\'ll get there!'
+      }),
+    ]);
+    const resetBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${color}22;border:1px solid ${color};color:${color};`,
+      text: 'Reset'
+    });
+    resetBtn.onclick = () => { flashcardState[prefix] = { index: 0, flipped: false, results: [] }; render(); };
+    results.appendChild(resetBtn);
+    deck.appendChild(results);
+    return deck;
+  }
+
+  const card = cards[state.index];
+  const fc = el('div', {
+    class: 'flashcard',
+    style: `background:${state.flipped ? color + '11' : COLORS.card.replace('#', '#')};border:1px solid ${state.flipped ? color : COLORS.border};`
+  });
+
+  // Counter
+  fc.appendChild(el('div', {
+    style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:12px;`,
+    text: `${state.index + 1} / ${cards.length}`
+  }));
+
+  if (!state.flipped) {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.q
+    }));
+    fc.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-top:12px;`,
+      text: 'Click to reveal'
+    }));
+    fc.onclick = () => { state.flipped = true; render(); };
+  } else {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.a
+    }));
+    fc.onclick = null;
+  }
+
+  deck.appendChild(fc);
+
+  if (state.flipped) {
+    const btnRow = el('div', { style: 'display:flex;gap:12px;margin-top:12px;justify-content:center;' });
+    const missBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.accent}22;border:1px solid ${COLORS.accent || '#f97316'};color:#fdba74;`,
+      text: 'Missed it'
+    });
+    missBtn.onclick = () => { state.results.push(false); state.index++; state.flipped = false; render(); };
+    const gotBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.success}22;border:1px solid ${COLORS.success};color:#86efac;`,
+      text: 'Got it!'
+    });
+    gotBtn.onclick = () => { state.results.push(true); state.index++; state.flipped = false; render(); };
+    btnRow.appendChild(missBtn);
+    btnRow.appendChild(gotBtn);
+    deck.appendChild(btnRow);
+  }
+
+  return deck;
+}
+
+function renderReferenceSection(sec) {
+  const isQuickRef = sec.title.toLowerCase().includes('quick reference');
+  const wrapper = el('div', {
+    style: `margin-top:${isQuickRef ? 32 : 16}px;background:${isQuickRef ? sec.color + '08' : COLORS.card};border:1px solid ${isQuickRef ? sec.color + '33' : COLORS.border};border-radius:16px;padding:24px;`
+  });
+
+  wrapper.appendChild(el('div', {
+    style: `font-family:'Fraunces',serif;font-size:18px;color:${isQuickRef ? sec.color : COLORS.text};font-weight:600;margin-bottom:16px;`,
+    text: sec.title
+  }));
+
+  const grid = el('div', {
+    style: `display:grid;grid-template-columns:${sec.gridCols};gap:${sec.valueKey === 'val' ? 8 : 12}px;${sec.valueKey === 'val' ? "font-family:'IBM Plex Mono',monospace;font-size:13px;" : ''}`
+  });
+
+  sec.items.forEach(item => {
+    if (sec.valueKey === 'val') {
+      const row = el('div', {
+        style: `display:flex;justify-content:space-between;padding:8px 12px;background:${COLORS.bg}88;border-radius:8px;`
+      }, [
+        el('span', { style: `color:${COLORS.textDim};`, text: item.label }),
+        el('span', { style: `color:${COLORS.text};`, text: item.val }),
+      ]);
+      grid.appendChild(row);
+    } else if (sec.valueKey === 'desc') {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.warm};margin-bottom:4px;font-weight:500;`, text: item.label }),
+        el('div', { style: `font-family:'Source Serif 4',serif;font-size:13px;color:${COLORS.textDim};line-height:1.5;`, text: item.desc }),
+      ]);
+      grid.appendChild(cell);
+    } else {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:4px;`, text: item.label }),
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:14px;color:${COLORS.warm};`, text: item.eq }),
+      ]);
+      grid.appendChild(cell);
+    }
+  });
+
+  wrapper.appendChild(grid);
+  return wrapper;
+}
+
+// === DOM HELPER ===
+function el(tag, opts, children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.style) e.setAttribute('style', opts.style);
+    if (opts.class) e.className = opts.class;
+    if (opts.text) e.textContent = opts.text;
+    if (opts.html) e.innerHTML = opts.html;
+  }
+  if (children) children.forEach(c => { if (c) e.appendChild(c); });
+  return e;
+}
+
+// === INIT ===
+render();
+</script>
+</body>
+</html>
