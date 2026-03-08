@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sc–Cu Transition Study Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Source+Serif+4:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Source Serif 4', serif; }
+  button { font-family: inherit; }
+  .concept-card { transition: border-color 0.3s ease; margin-bottom: 16px; border-radius: 16px; overflow: hidden; }
+  .concept-header { padding: 20px 24px; cursor: pointer; display: flex; align-items: center; gap: 16px; }
+  .concept-header:hover { opacity: 0.9; }
+  .arrow { transition: transform 0.3s ease; display: inline-block; }
+  .arrow.open { transform: rotate(180deg); }
+  .flashcard { border-radius: 12px; padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: transform 0.1s ease; }
+  .flashcard:hover { transform: scale(1.01); }
+  .flash-btn { padding: 8px 24px; border-radius: 8px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+  .flash-btn:hover { opacity: 0.85; }
+  .ref-grid-item { border-radius: 10px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// === DATA ===
+const COLORS = {
+  bg: "#0b0f1a",
+  card: "#111827",
+  accent: "#06b6d4",
+  warm: "#fbbf24",
+  cool: "#38bdf8",
+  violet: "#a78bfa",
+  emerald: "#34d399",
+  rose: "#fb7185",
+  slate: "#64748b",
+  teal: "#2dd4bf",
+  text: "#e2e8f0",
+  textDim: "#94a3b8",
+  border: "#1e293b",
+  success: "#22c55e",
+  successDim: "#166534",
+};
+
+const concepts = [
+  {
+    id: "transition-overview",
+    title: "The Sc → Cu Transition: Big Picture",
+    icon: "🌊",
+    color: COLORS.cool,
+    summary:
+      "As subtropical air flows equatorward over progressively warmer SSTs, stratocumulus cloud decks break up and give way to fields of trade cumulus — one of the most important cloud transitions in Earth's climate system.",
+    details: [
+      {
+        label: "Lagrangian Perspective",
+        content:
+          "The transition occurs as air parcels move equatorward within the Hadley circulation's trade-wind branch. Near the coast (cold SST, strong subsidence), the boundary layer is shallow (<1 km), well-mixed, and capped by a strong inversion with overcast Sc. As SSTs warm downstream, the PBL deepens, decouples, and Sc give way to Cu.",
+      },
+      {
+        label: "SST Gradient as Driver",
+        content:
+          "SST increases from ~14°C near the coast (e.g., California) to ~28°C near the tropics (e.g., Hawaii) over roughly 4000 km. This warming drives increased surface latent heat fluxes, deeper boundary layers, and ultimately the breakup of the Sc deck.",
+      },
+      {
+        label: "Transition Stages",
+        content:
+          "The transition proceeds through identifiable stages: Well-mixed Sc → Cu under Sc (decoupled BL) → Cu with broken Sc → trade Cu only. Wyant et al. (1997) showed that the key intermediate stage is 'Cu under Sc,' where cumulus rising from the subcloud layer feed a thinning Sc deck above.",
+      },
+      {
+        label: "Climate Significance",
+        content:
+          "Sc reflect far more sunlight than Cu (albedo 30–70% vs. ~10%). How quickly and where this transition occurs profoundly affects Earth's energy balance. Changes in the transition zone are a leading source of uncertainty in cloud feedback under warming.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Describe the large-scale setting in which the Sc-to-Cu transition occurs.",
+        a: "Air flows equatorward in the trade-wind branch of the Hadley circulation, moving over progressively warmer SSTs. The boundary layer deepens from <1 km (Sc regime) to >2 km (Cu regime) as SSTs increase from ~14°C to ~28°C over ~4000 km.",
+      },
+      {
+        q: "What are the main stages of the classic Sc → Cu transition?",
+        a: "Well-mixed Sc → Cu under Sc (decoupled BL with cumulus feeding thinning Sc above) → broken Sc with Cu → trade Cu only.",
+      },
+      {
+        q: "Why is the Sc-Cu transition important for climate?",
+        a: "Sc have much higher albedo (30–70%) than Cu (~10%), so the location and rate of this transition strongly affects Earth's energy balance and is a major source of cloud-feedback uncertainty.",
+      },
+      {
+        q: "What field campaign specifically studied this transition between California and Hawaii?",
+        a: "CSET (Cloud System Evolution in the Trades), which flew research flights between Sacramento, CA and Kona, HI (Albrecht et al. 2019).",
+      },
+    ],
+  },
+  {
+    id: "ctei",
+    title: "Cloud-Top Entrainment Instability (CTEI)",
+    icon: "🔄",
+    color: COLORS.violet,
+    summary:
+      "CTEI proposes that Sc break up when cloud-top entrainment creates negatively buoyant mixtures (buoyancy reversal), but observations show Sc can persist even when this criterion is met.",
+    details: [
+      {
+        label: "Buoyancy Reversal Mechanism",
+        content:
+          "CTEI (Randall 1980; Deardorff 1980) predicts the Sc layer is unstable if entrainment of warm, dry free-tropospheric air creates mixtures that are negatively buoyant due to evaporative cooling. The entrained parcel cools and moistens by evaporation, then accelerates downward.",
+      },
+      {
+        label: "The κ Parameter",
+        content:
+          "The potential for buoyancy reversal is controlled by κ = 1 + (cₚ/Lᵥ)(Δθₗ/Δqₜ), where Δθₗ and Δqₜ are the jumps in liquid water potential temperature and total water across the inversion. As SST increases, the inversion weakens and the humidity jump increases, raising κ.",
+      },
+      {
+        label: "Why CTEI Is Insufficient",
+        content:
+          "Observations and simulations show that Sc can persist even when buoyancy reversal conditions are met. CTEI alone doesn't appear sufficient for cloud break-up — the energetics of the boundary layer as a whole must be considered (Bretherton and Wyant 1997).",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What does CTEI stand for and what does it predict?",
+        a: "Cloud-Top Entrainment Instability. It predicts that the Sc layer is unstable and will break up if cloud-top entrainment creates negatively buoyant mixtures through evaporative cooling (buoyancy reversal).",
+      },
+      {
+        q: "Write the expression for the buoyancy reversal parameter κ.",
+        a: "κ = 1 + (cₚ/Lᵥ)(Δθₗ/Δqₜ), where Δθₗ and Δqₜ are the inversion jumps in liquid water potential temperature and total water mixing ratio.",
+      },
+      {
+        q: "Why is CTEI considered insufficient as an explanation for Sc break-up?",
+        a: "Because Sc have been observed to persist even when buoyancy reversal conditions are met. The criterion is necessary but not sufficient; the full boundary-layer energetics must be considered.",
+      },
+    ],
+  },
+  {
+    id: "decoupling-energetics",
+    title: "Decoupling: Energetic Arguments",
+    icon: "⚡",
+    color: COLORS.warm,
+    summary:
+      "Bretherton and Wyant (1997) showed that decoupling occurs when non-radiative forcings dominate the STBL energetics and the cloud entrains enough to negate radiative cooling, requiring work to mix entrained air below cloud base.",
+    details: [
+      {
+        label: "Energetic Framework",
+        content:
+          "Cloud-layer radiative cooling is the fundamental driving force for convection and entrainment, and it stays roughly constant as SST increases. Thus the vertically integrated buoyancy flux must also stay approximately constant. But latent heat fluxes increase dramatically with SST, forcing buoyancy flux to be redistributed — larger in the cloud layer, smaller (or negative) in the subcloud layer.",
+      },
+      {
+        label: "The Decoupling Cascade",
+        content:
+          "Greater in-cloud buoyancy flux → greater turbulence → more entrainment per unit of radiative cooling → greater downward flux of warm, dry entrained air → increasingly negative buoyancy fluxes below cloud base → a weak stable layer forms below cloud base → decoupling.",
+      },
+      {
+        label: "Factors Favoring Decoupling",
+        content:
+          "Decoupling is favored by: (1) high cloud-base height, (2) large surface evaporation, (3) small radiative cooling of cloud top, and (4) large entrainment efficiency factor. All of these become more likely as SST warms and the MBL deepens.",
+      },
+      {
+        label: "Mixed-Layer Maintenance Criterion",
+        content:
+          "A buoyancy-driven mixed layer can be maintained only if the generation of eddy kinetic energy by buoyancy fluxes is predominantly positive throughout most of the mixed layer. When subcloud buoyancy flux becomes negative, the mixed layer can no longer be sustained as a single unit.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What is the fundamental driving force for convection and entrainment in the STBL?",
+        a: "Cloud-layer radiative cooling (longwave emission at cloud top). It stays approximately constant as SST increases.",
+      },
+      {
+        q: "Explain the chain of events that leads to decoupling as SST warms.",
+        a: "SST↑ → latent heat flux↑ → in-cloud buoyancy flux↑ → entrainment↑ → downward flux of warm entrained air↑ → subcloud buoyancy flux becomes negative → stable layer forms below cloud base → decoupling.",
+      },
+      {
+        q: "List four factors that favor decoupling of the STBL.",
+        a: "High cloud-base height, large surface evaporation, small radiative cooling at cloud top, and large entrainment efficiency factor.",
+      },
+      {
+        q: "What is the mixed-layer maintenance criterion?",
+        a: "A buoyancy-driven mixed layer can only be maintained if the generation of eddy kinetic energy by buoyancy fluxes is predominantly positive throughout most of the mixed layer.",
+      },
+      {
+        q: "Why does the vertically integrated buoyancy flux stay ~constant even as SST increases?",
+        a: "Because cloud-top radiative cooling — the fundamental energy source — stays roughly constant. The total buoyancy flux production must match this energy input, even though its vertical distribution shifts.",
+      },
+    ],
+  },
+  {
+    id: "stbl-vulnerable",
+    title: "Why the STBL Is Vulnerable to Decoupling",
+    icon: "🎯",
+    color: COLORS.rose,
+    summary:
+      "The stratocumulus-topped boundary layer has an unusual buoyancy flux profile due to phase changes of water, making it inherently vulnerable to decoupling as conditions evolve.",
+    details: [
+      {
+        label: "Unusual Buoyancy Flux Profile",
+        content:
+          "Unlike a dry convective boundary layer, the STBL has a buoyancy flux profile shaped by phase changes. Entrainment at cloud top brings in warm, dry air whose mixing produces negative buoyancy flux (evaporative cooling). This creates a region of negative buoyancy flux near cloud top that doesn't exist in dry convection.",
+      },
+      {
+        label: "Updraft vs. Downdraft Condensation Levels",
+        content:
+          "As SST warms, updrafts become more and more moistened. The updraft condensation level (which defines cumulus base) and the downdraft condensation level (which defines stratocumulus base) increasingly separate. This growing gap between cloud bases is a hallmark of developing decoupling.",
+      },
+      {
+        label: "Definition of Decoupling",
+        content:
+          "Decoupling occurs when surface-driven convective thermals can no longer reach the cloud layer. Heat and moisture transport from the surface to the cloud layer decreases, the cloud layer warms and dries compared to the subcloud layer, and the BL can no longer be treated as a single mixed layer.",
+      },
+      {
+        label: "Consequence: Cu Layer Development",
+        content:
+          "Decoupling leads to the development of a cumulus layer. The cumuli take over entrainment at the inversion, mixing in enough dry air to gradually evaporate the Sc below the inversion.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Why is the STBL buoyancy flux profile 'unusual' compared to a dry CBL?",
+        a: "Phase changes of water create a region of negative buoyancy flux near cloud top due to evaporative cooling when warm, dry inversion air is entrained and mixed down.",
+      },
+      {
+        q: "What defines the cumulus base vs. the stratocumulus base in a decoupled BL?",
+        a: "Cumulus base = updraft condensation level; Stratocumulus base = downdraft condensation level. As decoupling develops, these levels increasingly separate.",
+      },
+      {
+        q: "What is the formal definition of decoupling?",
+        a: "When surface-driven convective thermals can no longer reach the cloud layer. Heat and moisture transport from surface to cloud decreases, the cloud layer warms and dries, and the BL can no longer be treated as a single mixed layer.",
+      },
+      {
+        q: "What takes over the role of entrainment once the BL decouples?",
+        a: "Cumulus clouds take over the entrainment at the inversion, mixing in dry air that gradually evaporates the overlying stratocumulus.",
+      },
+    ],
+  },
+  {
+    id: "cu-under-sc",
+    title: "Cu Under Sc: The Decoupled CTBL",
+    icon: "🏗️",
+    color: COLORS.emerald,
+    summary:
+      "In the decoupled cloud-topped boundary layer, small cumulus clouds rise from the subcloud layer into an overlying stratocumulus deck — the transitional 'Cu under Sc' regime.",
+    details: [
+      {
+        label: "Structure of the Decoupled BL",
+        content:
+          "The subcloud layer circuit becomes separated from the branch that goes into the cumulus cloud layer. Air outside cumuli subsides and is much drier than the updrafts. There is weak stratification in the cumulus layer between the two cloud bases.",
+      },
+      {
+        label: "Updraft and Downdraft Behavior",
+        content:
+          "As the cloud base of updrafts and downdrafts separates, updrafts become more intense and widely spaced — small cumulus clouds rising into an overlying cloud layer. Downdraft areas below the downdraft cloud base broaden. Cumulus updrafts rise until the inversion, where they become negatively buoyant and detrain.",
+      },
+      {
+        label: "Sc Breakup Mechanism",
+        content:
+          "Stratus starts to break into broad, thin patches, sustained only by injection of liquid water by cumulus updrafts rising from the moister subcloud layer. As the BL continues to deepen, cumulus penetrative entrainment eventually breaks up the stratocumulus entirely.",
+      },
+      {
+        label: "Thermodynamic Signatures",
+        content:
+          "Updraft warming occurs due to condensation; evaporative cooling occurs where air entrains at the inversion. The Cu overshoot region at cloud top is characterized by this competition between latent heat release and entrainment-driven evaporation.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Describe the structure of the 'Cu under Sc' regime.",
+        a: "Small cumulus clouds rise from the moister subcloud layer into an overlying Sc deck. The subcloud circulation is separated from the cloud layer. Air outside the cumuli subsides and is much drier. Weak stratification exists between the two cloud bases.",
+      },
+      {
+        q: "How do updrafts change as the BL decouples?",
+        a: "Updrafts become more intense and widely spaced. Only the most powerful subcloud-layer updrafts can penetrate the stable layer up to the Sc cloud base. They resemble small cumuli.",
+      },
+      {
+        q: "What sustains the thinning Sc patches in the transitional regime?",
+        a: "Injection of liquid water by cumulus updrafts rising from the moister subcloud layer. Without this supply, the Sc thin and break apart.",
+      },
+      {
+        q: "What ultimately destroys the Sc deck?",
+        a: "Cumulus penetrative entrainment. As the decoupled BL deepens, cumuli entrain enough dry free-tropospheric air to evaporate the remaining Sc.",
+      },
+    ],
+  },
+  {
+    id: "role-of-precip",
+    title: "Role of Precipitation",
+    icon: "🌧️",
+    color: COLORS.teal,
+    summary:
+      "Precipitation plays a key role in accelerating Sc break-up through aerosol removal, enhanced decoupling, and surface divergence — and may drive an alternate transition pathway to open cells.",
+    details: [
+      {
+        label: "Precipitation–Aerosol Feedback",
+        content:
+          "Precipitation accentuates decoupling and feeds back with aerosol. Heavier drizzle breaks up stratocumulus and removes aerosol from the boundary layer. Reduced aerosol means fewer, larger droplets, which drizzle more efficiently — a positive feedback loop.",
+      },
+      {
+        label: "Drizzle Mechanisms",
+        content:
+          "Drizzle in cumuli is transported into the stratocumulus layer by turbulence. Heavier drizzle creates surface divergence and produces open cells. Larger rain drops are more able to reach the surface, reinforcing aerosol removal.",
+      },
+      {
+        label: "CSET Observations (Sarkar et al. 2020)",
+        content:
+          "Boundary layers that deepen most transition most rapidly. The fastest transitions have the largest change in rain rate. Larger raindrops that reach the surface more efficiently reinforce the removal of aerosol, accelerating the transition.",
+      },
+      {
+        label: "LES Evidence (Yamaguchi et al. 2017)",
+        content:
+          "Lagrangian LES simulations show that cases generating precipitation undergo rapid decreases in cloud fraction. Critically, the Sc-Cu transition induced by cumulus precipitation does NOT occur when the BL has ample aerosol — implying that models need to predict aerosol and drop number concentrations rather than impose them.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "How does precipitation create a positive feedback that accelerates Sc break-up?",
+        a: "Drizzle removes aerosol from the BL → fewer CCN → fewer, larger droplets → more efficient drizzle → more aerosol removal. This positive feedback loop accelerates the transition.",
+      },
+      {
+        q: "What did CSET observations (Sarkar et al. 2020) show about rain rate and transition speed?",
+        a: "BLs that deepen most transition most rapidly. The fastest transitions have the largest change in rain rate. Larger drops reaching the surface reinforce aerosol removal.",
+      },
+      {
+        q: "What key finding from Yamaguchi et al. (2017) LES relates aerosol to the transition?",
+        a: "The Sc-Cu transition driven by cumulus precipitation does not occur when the BL has ample aerosol. This implies models must predict (not impose) aerosol and drop number concentrations.",
+      },
+      {
+        q: "How does drizzle produce open cells in stratocumulus?",
+        a: "Drizzle creates surface divergence — the evaporative cooling of falling rain drives downdrafts that spread at the surface, producing the open-cell pattern with clear centers and cloudy edges.",
+      },
+    ],
+  },
+  {
+    id: "multiple-pathways",
+    title: "Multiple Transition Pathways",
+    icon: "🔀",
+    color: COLORS.violet,
+    summary:
+      "Observational evidence shows at least two distinct transition pathways: the classic deepening-warming Sc→Cu transition, and a precipitation-driven closed→open cell transition.",
+    details: [
+      {
+        label: "Classic Pathway: Closed Sc → Cu",
+        content:
+          "The classic stratocumulus transition to a disorganized cumulus field (closed cell → disorganized cells) driven by the deepening-warming mechanism. Favored by warm SST, deep PBL, low LTS, dry free troposphere, and weak subsidence.",
+      },
+      {
+        label: "Alternate Pathway: Closed Sc → Open Cell",
+        content:
+          "An alternate transition from closed-cell Sc to open-cell, oscillatory convection (closed cell → open cell). This pathway is precipitation-driven, favored by low droplet concentration (Nᵈ), heavier overnight drizzle, and strong wind speed.",
+      },
+      {
+        label: "Eastman et al. (2021) Observations",
+        content:
+          "Lagrangian trajectory analysis found observational evidence for both pathways across all major Sc regions (NE Pacific, SE Pacific, SE Atlantic, E Indian). Closed-closed trajectories are associated with shallow PBL, high Nᵈ, low rain rate, cool SST, and high LTS. Closed-disorganized trajectories have deep PBL, warm SST, low LTS, dry free troposphere, and weak subsidence.",
+      },
+      {
+        label: "Closed-Open Characteristics",
+        content:
+          "The closed-to-open transition is distinctly characterized by low Nᵈ and heavier overnight drizzle, with strong wind speed. This differs from both the non-transitioning (closed-closed) and the classic (closed-disorganized) pathways.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Name the two main transition pathways from closed-cell stratocumulus.",
+        a: "1) Classic deepening-warming pathway: Closed Sc → disorganized Cu (driven by SST warming, BL deepening). 2) Precipitation-driven pathway: Closed Sc → open-cell Sc (driven by drizzle and aerosol-precipitation feedbacks).",
+      },
+      {
+        q: "What environmental conditions favor the closed→disorganized (classic) transition?",
+        a: "Deep PBL, warm SST, low LTS, dry free troposphere, and weak subsidence.",
+      },
+      {
+        q: "What environmental conditions favor the closed→open cell transition?",
+        a: "Low droplet concentration (Nᵈ), heavier overnight drizzle, and strong wind speed.",
+      },
+      {
+        q: "What study used Lagrangian trajectories to provide observational evidence for multiple transition pathways?",
+        a: "Eastman et al. (2021), using trajectory analysis across NE Pacific, SE Pacific, SE Atlantic, and E Indian Ocean Sc regions.",
+      },
+    ],
+  },
+  {
+    id: "les-simulations",
+    title: "LES of the Transition",
+    icon: "💻",
+    color: COLORS.slate,
+    summary:
+      "Large-Eddy Simulations have been instrumental in understanding the transition, from idealized mixed-layer models to Lagrangian LES that follow air parcels over warming SSTs.",
+    details: [
+      {
+        label: "Bretherton & Wyant (1997) / Wyant et al. (1997)",
+        content:
+          "Used mixed-layer models to show the decoupling cascade: as SST warms and MBL deepens, upward latent heat fluxes increase dramatically, yet the vertical average buoyancy flux barely changes. This redistributes buoyancy flux, driving negative values below cloud base and initiating decoupling.",
+      },
+      {
+        label: "Sandu and Stevens (2011)",
+        content:
+          "Ran Lagrangian LES following a summer composite trajectory over warmer SSTs with weak subsidence in the NE Pacific (JJA 2006–2007). Used a 6 km × 6 km domain with 35 m horizontal and 5 m vertical grid spacing. Demonstrated the evolution from overcast Sc through broken cloud to Cu.",
+      },
+      {
+        label: "van der Dussen et al. (2013)",
+        content:
+          "DALES Lagrangian LES simulation of ASTEX. Showed that as the BL deepens, shallow cumulus develop which penetrate the Sc layer above. The onset of Sc breakup is marked by the appearance of clear-air patches at the top of the cloud layer.",
+      },
+      {
+        label: "Yamaguchi et al. (2017)",
+        content:
+          "Lagrangian LES with varying initial aerosol concentrations (NA100 through NA250). Showed that low-aerosol cases generating precipitation undergo rapid cloud fraction decrease, while high-aerosol cases maintain Sc. This demonstrated the critical role of aerosol in modulating the transition.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "What key result did Wyant et al. (1997) demonstrate about buoyancy flux during the transition?",
+        a: "As SST warms and MBL deepens, latent heat fluxes increase dramatically but the vertically averaged buoyancy flux barely changes. Buoyancy flux is redistributed — larger in cloud, negative below cloud base.",
+      },
+      {
+        q: "Describe the Sandu and Stevens (2011) LES setup.",
+        a: "Lagrangian LES following a summer composite trajectory over warming SSTs in the NE Pacific. 6 km × 6 km domain, 35 m horizontal grid spacing, 5 m vertical grid spacing.",
+      },
+      {
+        q: "What marks the onset of Sc breakup in the van der Dussen et al. (2013) simulation?",
+        a: "The appearance of clear-air patches at the top of the cloud layer, as shallow cumulus develop and penetrate the thinning Sc from below.",
+      },
+      {
+        q: "What did Yamaguchi et al. (2017) show about aerosol and the Sc-Cu transition?",
+        a: "Low aerosol cases (generating precipitation) showed rapid cloud fraction decrease, while high aerosol cases maintained Sc. The precipitation-driven transition does not occur when the BL has ample aerosol.",
+      },
+    ],
+  },
+  {
+    id: "key-conclusions",
+    title: "Key Conclusions",
+    icon: "📌",
+    color: COLORS.accent,
+    summary:
+      "The Sc-Cu transition is driven by the energetics of the deepening boundary layer, accelerated by precipitation feedbacks, with multiple possible pathways depending on aerosol and meteorological conditions.",
+    details: [
+      {
+        label: "Radiative Cooling Is Constant",
+        content:
+          "Cloud-layer radiative cooling is the fundamental driving force for convection and entrainment, and it stays approximately the same as SST increases. This constancy constrains the vertically integrated buoyancy flux.",
+      },
+      {
+        label: "Latent Heat Flux Drives Redistribution",
+        content:
+          "Latent heat fluxes increase with SST, forcing buoyancy flux to be larger in the cloud layer than in the subcloud layer. Greater cloud buoyancy flux drives greater entrainment. Greater downward flux of warm entrained air causes subcloud buoyancy flux to become negative.",
+      },
+      {
+        label: "Decoupling → Cu → Sc Breakup",
+        content:
+          "The weak stable layer below cloud base leads to decoupling. As the decoupled cloud-topped boundary layer deepens, cumulus penetrative entrainment breaks up the stratocumulus.",
+      },
+      {
+        label: "Precipitation as Accelerator",
+        content:
+          "Precipitation accelerates the Sc-Cu transition and may drive an alternate endpoint (open cells rather than disorganized Cu). Aerosol-precipitation feedbacks are critical — models must predict aerosol concentrations to capture this correctly.",
+      },
+    ],
+    flashcards: [
+      {
+        q: "Summarize the Sc-Cu transition in 3 sentences.",
+        a: "As SST warms, latent heat fluxes increase while radiative cooling stays constant, redistributing buoyancy flux and causing negative values below cloud base (decoupling). Cumulus develop in the subcloud layer and penetrate the Sc, gradually destroying it through entrainment of dry air. Precipitation can accelerate this process and may drive an alternate open-cell endpoint.",
+      },
+      {
+        q: "Why must climate models predict (not impose) aerosol concentrations?",
+        a: "Because the precipitation-driven Sc-Cu transition depends critically on aerosol. With ample aerosol, Sc persist. With low aerosol, precipitation develops and drives rapid cloud break-up. Imposing fixed aerosol misses this feedback.",
+      },
+      {
+        q: "What is the difference between the Sc and trade Cu environments in terms of sounding?",
+        a: "Sc environment: strong low-level inversion, shallow moist BL, cool SST, near-zero CAPE. Trade Cu environment: deeper moist layer, weaker inversion at higher altitude, warm SST, small but nonzero CAPE, more moisture.",
+      },
+    ],
+  },
+];
+
+const referenceSections = [
+  {
+    title: "Quick Reference — Key Concepts & Parameters",
+    items: [
+      { label: "CTEI parameter", eq: "κ = 1 + (cₚ/Lᵥ)(Δθₗ/Δqₜ)" },
+      { label: "Mixed-layer criterion", eq: "∫ F_b dz > 0 (mostly)" },
+      { label: "Decoupling trigger", eq: "Subcloud F_b < 0" },
+      { label: "Cu base defined by", eq: "Updraft condensation level" },
+      { label: "Sc base defined by", eq: "Downdraft condensation level" },
+      { label: "Transition distance", eq: "~4000 km (CA → HI)" },
+    ],
+    color: COLORS.accent,
+    gridCols: "1fr 1fr",
+    valueKey: "eq",
+  },
+  {
+    title: "Transition Pathway Comparison",
+    items: [
+      { label: "Closed → Disorganized", desc: "Warm SST, deep PBL, low LTS, dry FT, weak subsidence" },
+      { label: "Closed → Open Cell", desc: "Low Nᵈ, heavy overnight drizzle, strong wind" },
+      { label: "Closed → Closed", desc: "Cool SST, shallow PBL, high Nᵈ, high LTS, low rain" },
+    ],
+    color: COLORS.text,
+    gridCols: "1fr",
+    valueKey: "desc",
+  },
+];
+
+// === STATE ===
+let openId = null;
+const flashcardState = {};
+
+function initFlashcardState(cards, prefix) {
+  if (!flashcardState[prefix]) {
+    flashcardState[prefix] = { index: 0, flipped: false, results: [] };
+  }
+}
+
+// === RENDER ===
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const root = el('div', {
+    style: `min-height:100vh;background:${COLORS.bg};padding:40px 20px;font-family:'Source Serif 4',serif;`
+  });
+
+  const container = el('div', { style: 'max-width:720px;margin:0 auto;' });
+
+  // Header
+  container.appendChild(el('div', { style: 'text-align:center;margin-bottom:48px;' }, [
+    el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.accent};text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;`,
+      text: 'MET 5537 — Study Guide'
+    }),
+    el('h1', {
+      style: `font-family:'Fraunces',serif;font-size:36px;font-weight:700;color:${COLORS.text};line-height:1.2;margin:0;`,
+      html: `The Stratocumulus–Cumulus<br><span style="color:${COLORS.accent}">Transition</span>`
+    }),
+    el('p', {
+      style: `font-size:15px;color:${COLORS.textDim};margin-top:16px;line-height:1.6;max-width:500px;margin-left:auto;margin-right:auto;`,
+      text: 'Expand each topic for detailed notes and self-test flashcards drawn from Prof. Wing\'s lectures on the Sc–Cu transition.'
+    }),
+  ]));
+
+  // Concept Cards
+  concepts.forEach(c => {
+    container.appendChild(renderConceptCard(c));
+  });
+
+  // Reference Sections
+  referenceSections.forEach(sec => {
+    container.appendChild(renderReferenceSection(sec));
+  });
+
+  // Footer
+  container.appendChild(el('div', {
+    style: `margin-top:32px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};`,
+    text: 'Based on lectures by Prof. Allison Wing — MET 5537'
+  }));
+
+  root.appendChild(container);
+  app.appendChild(root);
+}
+
+function renderConceptCard(c) {
+  const isOpen = openId === c.id;
+  const card = el('div', {
+    class: 'concept-card',
+    style: `background:${COLORS.card};border:1px solid ${isOpen ? c.color : COLORS.border};`
+  });
+
+  const header = el('div', { class: 'concept-header' }, [
+    el('span', { style: 'font-size:28px;', text: c.icon }),
+    el('div', { style: 'flex:1;' }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.text};font-weight:600;`,
+        text: c.title
+      }),
+      el('div', {
+        style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.textDim};margin-top:4px;line-height:1.5;`,
+        text: c.summary
+      }),
+    ]),
+    el('span', {
+      class: 'arrow' + (isOpen ? ' open' : ''),
+      style: `color:${c.color};font-size:20px;`,
+      text: '▾'
+    }),
+  ]);
+
+  header.onclick = () => { openId = (openId === c.id) ? null : c.id; render(); };
+  card.appendChild(header);
+
+  if (isOpen) {
+    const body = el('div', { style: 'padding:0 24px 24px;' });
+    body.appendChild(el('div', { style: `height:1px;background:${COLORS.border};margin-bottom:20px;` }));
+
+    body.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;`,
+      text: 'Key Details'
+    }));
+
+    c.details.forEach(d => {
+      body.appendChild(el('div', {
+        style: `margin-bottom:16px;padding-left:16px;border-left:2px solid ${c.color}33;`
+      }, [
+        el('div', {
+          style: `font-family:'Fraunces',serif;font-size:15px;color:${c.color};font-weight:600;margin-bottom:4px;`,
+          text: d.label
+        }),
+        el('div', {
+          style: `font-family:'Source Serif 4',serif;font-size:14px;color:${COLORS.text};line-height:1.7;opacity:0.9;`,
+          text: d.content
+        }),
+      ]));
+    });
+
+    body.appendChild(el('div', {
+      style: `margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${c.color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;`,
+      text: 'Self-Test Flashcards'
+    }));
+    body.appendChild(renderFlashcardDeck(c.flashcards, c.color, c.id));
+
+    card.appendChild(body);
+  }
+
+  return card;
+}
+
+function renderFlashcardDeck(cards, color, prefix) {
+  initFlashcardState(cards, prefix);
+  const state = flashcardState[prefix];
+  const deck = el('div');
+
+  if (state.index >= cards.length) {
+    const correct = state.results.filter(r => r).length;
+    const pct = Math.round((correct / cards.length) * 100);
+    const results = el('div', {
+      style: `background:${COLORS.success}11;border:1px solid ${COLORS.success}33;border-radius:12px;padding:20px;text-align:center;`
+    }, [
+      el('div', {
+        style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.success};margin-bottom:8px;`,
+        text: `${pct}% — ${correct}/${cards.length} correct`
+      }),
+      el('div', {
+        style: `font-size:13px;color:${COLORS.textDim};margin-bottom:16px;`,
+        text: pct === 100 ? 'Perfect score!' : pct >= 70 ? 'Good job! Review the ones you missed.' : 'Keep studying — you\'ll get there!'
+      }),
+    ]);
+    const resetBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${color}22;border:1px solid ${color};color:${color};`,
+      text: 'Reset'
+    });
+    resetBtn.onclick = () => { flashcardState[prefix] = { index: 0, flipped: false, results: [] }; render(); };
+    results.appendChild(resetBtn);
+    deck.appendChild(results);
+    return deck;
+  }
+
+  const card = cards[state.index];
+  const fc = el('div', {
+    class: 'flashcard',
+    style: `background:${state.flipped ? color + '11' : COLORS.card};border:1px solid ${state.flipped ? color : COLORS.border};`
+  });
+
+  fc.appendChild(el('div', {
+    style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:12px;`,
+    text: `${state.index + 1} / ${cards.length}`
+  }));
+
+  if (!state.flipped) {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.q
+    }));
+    fc.appendChild(el('div', {
+      style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-top:12px;`,
+      text: 'Click to reveal'
+    }));
+    fc.onclick = () => { state.flipped = true; render(); };
+  } else {
+    fc.appendChild(el('div', {
+      style: `font-family:'Source Serif 4',serif;font-size:15px;color:${COLORS.text};line-height:1.6;`,
+      text: card.a
+    }));
+    fc.onclick = null;
+  }
+
+  deck.appendChild(fc);
+
+  if (state.flipped) {
+    const btnRow = el('div', { style: 'display:flex;gap:12px;margin-top:12px;justify-content:center;' });
+    const missBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.accent}22;border:1px solid ${COLORS.accent};color:#67e8f9;`,
+      text: 'Missed it'
+    });
+    missBtn.onclick = () => { state.results.push(false); state.index++; state.flipped = false; render(); };
+    const gotBtn = el('button', {
+      class: 'flash-btn',
+      style: `background:${COLORS.success}22;border:1px solid ${COLORS.success};color:#86efac;`,
+      text: 'Got it!'
+    });
+    gotBtn.onclick = () => { state.results.push(true); state.index++; state.flipped = false; render(); };
+    btnRow.appendChild(missBtn);
+    btnRow.appendChild(gotBtn);
+    deck.appendChild(btnRow);
+  }
+
+  return deck;
+}
+
+function renderReferenceSection(sec) {
+  const isQuickRef = sec.title.toLowerCase().includes('quick reference');
+  const wrapper = el('div', {
+    style: `margin-top:${isQuickRef ? 32 : 16}px;background:${isQuickRef ? sec.color + '08' : COLORS.card};border:1px solid ${isQuickRef ? sec.color + '33' : COLORS.border};border-radius:16px;padding:24px;`
+  });
+
+  wrapper.appendChild(el('div', {
+    style: `font-family:'Fraunces',serif;font-size:18px;color:${isQuickRef ? sec.color : COLORS.text};font-weight:600;margin-bottom:16px;`,
+    text: sec.title
+  }));
+
+  const grid = el('div', {
+    style: `display:grid;grid-template-columns:${sec.gridCols};gap:${sec.valueKey === 'val' ? 8 : 12}px;${sec.valueKey === 'val' ? "font-family:'IBM Plex Mono',monospace;font-size:13px;" : ''}`
+  });
+
+  sec.items.forEach(item => {
+    if (sec.valueKey === 'val') {
+      const row = el('div', {
+        style: `display:flex;justify-content:space-between;padding:8px 12px;background:${COLORS.bg}88;border-radius:8px;`
+      }, [
+        el('span', { style: `color:${COLORS.textDim};`, text: item.label }),
+        el('span', { style: `color:${COLORS.text};`, text: item.val }),
+      ]);
+      grid.appendChild(row);
+    } else if (sec.valueKey === 'desc') {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:12px;color:${COLORS.warm};margin-bottom:4px;font-weight:500;`, text: item.label }),
+        el('div', { style: `font-family:'Source Serif 4',serif;font-size:13px;color:${COLORS.textDim};line-height:1.5;`, text: item.desc }),
+      ]);
+      grid.appendChild(cell);
+    } else {
+      const cell = el('div', {
+        class: 'ref-grid-item',
+        style: `background:${COLORS.card};border:1px solid ${COLORS.border};`
+      }, [
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:11px;color:${COLORS.textDim};margin-bottom:4px;`, text: item.label }),
+        el('div', { style: `font-family:'IBM Plex Mono',monospace;font-size:14px;color:${COLORS.warm};`, text: item.eq }),
+      ]);
+      grid.appendChild(cell);
+    }
+  });
+
+  wrapper.appendChild(grid);
+  return wrapper;
+}
+
+// === DOM HELPER ===
+function el(tag, opts, children) {
+  const e = document.createElement(tag);
+  if (opts) {
+    if (opts.style) e.setAttribute('style', opts.style);
+    if (opts.class) e.className = opts.class;
+    if (opts.text) e.textContent = opts.text;
+    if (opts.html) e.innerHTML = opts.html;
+  }
+  if (children) children.forEach(c => { if (c) e.appendChild(c); });
+  return e;
+}
+
+// === INIT ===
+render();
+</script>
+</body>
+</html>
