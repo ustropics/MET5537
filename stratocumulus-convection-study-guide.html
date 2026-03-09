@@ -571,11 +571,11 @@ function renderFlashcardDeck(cards, color, prefix) {
     }, [
       el('div', {
         style: `font-family:'Fraunces',serif;font-size:20px;color:${COLORS.success};margin-bottom:8px;`,
-        text: `${pct}% — ${correct}/${cards.length} correct`
+        text: `${cards.length} / ${cards.length} reviewed`
       }),
       el('div', {
         style: `font-size:13px;color:${COLORS.textDim};margin-bottom:16px;`,
-        text: pct === 100 ? 'Perfect score!' : pct >= 70 ? 'Good job! Review the ones you missed.' : 'Keep studying — you\'ll get there!'
+        text: 'All cards reviewed!'
       }),
     ]);
     const resetBtn = el('button', {
@@ -623,19 +623,12 @@ function renderFlashcardDeck(cards, color, prefix) {
 
   if (state.flipped) {
     const btnRow = el('div', { style: 'display:flex;gap:12px;margin-top:12px;justify-content:center;' });
-    const missBtn = el('button', {
-      class: 'flash-btn',
-      style: `background:${COLORS.accent}22;border:1px solid ${COLORS.accent || '#f97316'};color:#fdba74;`,
-      text: 'Missed it'
-    });
-    missBtn.onclick = () => { state.results.push(false); state.index++; state.flipped = false; render(); };
     const gotBtn = el('button', {
       class: 'flash-btn',
       style: `background:${COLORS.success}22;border:1px solid ${COLORS.success};color:#86efac;`,
-      text: 'Got it!'
+      text: 'Next'
     });
-    gotBtn.onclick = () => { state.results.push(true); state.index++; state.flipped = false; render(); };
-    btnRow.appendChild(missBtn);
+    gotBtn.onclick = () => { state.index++; state.flipped = false; render(); };
     btnRow.appendChild(gotBtn);
     deck.appendChild(btnRow);
   }
